@@ -6,9 +6,29 @@ services:
     container_name: auth-service
     ports:
       - "8080:8080"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/authdb
+
 
   dorm-service:
     build: ./dorm-service
     container_name: dorm-service
     ports:
       - "8081:8081"
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/dormdb
+
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
