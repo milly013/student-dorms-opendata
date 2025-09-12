@@ -10,6 +10,7 @@ services:
       - mongo
     environment:
       - MONGO_URI=mongodb://mongo:27017/authdb
+      - JWT_SECRET=moj-tajni_kljuc
 
 
   dorm-service:
