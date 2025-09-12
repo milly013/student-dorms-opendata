@@ -31,5 +31,15 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - dorm-service
+      # - opendata-service
+
+
 volumes:
   mongo_data:
