@@ -5,6 +5,8 @@ import (
 	"auth-service/service"
 	"encoding/json"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type UserHandler struct {
@@ -88,4 +90,31 @@ func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	json.NewEncoder(w).Encode(users)
+}
+
+// GetUserByIDHandler -> GET /users/{id}
+func (h *UserHandler) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	user, err := h.userService.GetUserByID(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
+}
+
+// DeleteUserHandler -> DELETE /users/{id}
+func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if err := h.userService.DeleteUserByID(id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted successfully"})
 }

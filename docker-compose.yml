@@ -23,6 +23,17 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/dormdb
 
+  opendata-service:
+    build: ./opendata-service
+    container_name: opendata-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mongo
+      - dorm-service
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/dormdb
+
   mongo:
     image: mongo:6
     container_name: mongo
@@ -38,7 +49,7 @@ services:
     depends_on:
       - auth-service
       - dorm-service
-      # - opendata-service
+      - opendata-service
 
 
 volumes:

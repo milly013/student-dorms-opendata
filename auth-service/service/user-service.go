@@ -90,9 +90,21 @@ func (s *UserService) ChangePassword(email, newPassword string) error {
 	return s.repo.UpdatePassword(email, string(hashedPassword))
 }
 
-// DeleteUser briše korisnika po email-u
-func (s *UserService) DeleteUser(email string) error {
-	return s.repo.DeleteByEmail(email)
+// GetUserByID vraća korisnika po ID-u
+func (s *UserService) GetUserByID(id string) (*model.User, error) {
+	user, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+	return user, nil
+}
+
+// DeleteUserByID briše korisnika po ID-u
+func (s *UserService) DeleteUserByID(id string) error {
+	return s.repo.DeleteByID(id)
 }
 
 // HealthCheck (opciono) - jednostavan health check

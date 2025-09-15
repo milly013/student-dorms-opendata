@@ -10,6 +10,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -35,16 +37,23 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
-	// Definisanje ruta
-	http.HandleFunc("/register", userHandler.RegisterHandler)
-	http.HandleFunc("/login", userHandler.LoginHandler)
-	http.Handle("/users", middleware.JWTAuth(http.HandlerFunc(userHandler.GetAllUsersHandler)))
+	r := mux.NewRouter()
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	// Rute za auth
+	r.HandleFunc("/register", userHandler.RegisterHandler).Methods("POST")
+	r.HandleFunc("/login", userHandler.LoginHandler).Methods("POST")
+
+	// Rute za korisnike sa JWT middleware
+	r.Handle("/users", middleware.JWTAuth(http.HandlerFunc(userHandler.GetAllUsersHandler))).Methods("GET")
+	r.Handle("/users/{id}", middleware.JWTAuth(http.HandlerFunc(userHandler.GetUserByIDHandler))).Methods("GET")
+	r.Handle("/users/{id}", middleware.JWTAuth(http.HandlerFunc(userHandler.DeleteUserHandler))).Methods("DELETE")
+
+	// Health check
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Auth service is running 🚀"))
 	})
 
 	port := "8080"
-	log.Println("Auth-service running on port: ", port)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Auth-service running on port:", port)
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }
