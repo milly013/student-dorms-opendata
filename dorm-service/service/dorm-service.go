@@ -14,8 +14,9 @@ func NewDormService(repo *repo.DormRepository) *DormService {
 	return &DormService{repo: repo}
 }
 
+// --- CRUD funkcije ---
+
 func (s *DormService) CreateDorm(dorm *model.Dorm) error {
-	// Možeš dodati validacije ako želiš
 	if dorm.Capacity < dorm.Occupied {
 		return errors.New("occupied cannot be greater than capacity")
 	}
@@ -39,4 +40,18 @@ func (s *DormService) UpdateDorm(id string, dorm *model.Dorm) error {
 
 func (s *DormService) DeleteDorm(id string) error {
 	return s.repo.Delete(id)
+}
+
+// --- Pretraga po gradu ---
+func (s *DormService) GetDormsByCity(city string) ([]model.Dorm, error) {
+	return s.repo.FindByCity(city)
+}
+
+// --- Filter po vrsti smeštaja ---
+// ✅ Ispravljeno da poziva ispravno FindByType iz repozitorijuma
+func (s *DormService) GetDormsByType(dormType string) ([]model.Dorm, error) {
+	if dormType == "" {
+		return nil, errors.New("dormType cannot be empty")
+	}
+	return s.repo.FindByType(dormType)
 }

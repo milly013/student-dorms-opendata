@@ -73,14 +73,13 @@ func (r *DormRepository) Update(id string, updated *model.Dorm) error {
 
 	filter := bson.M{"id": id}
 
-	// Kreiramo mapu bez ID polja za update
 	updateData := bson.M{
 		"name":        updated.Name,
 		"address":     updated.Address,
 		"city":        updated.City,
 		"capacity":    updated.Capacity,
 		"occupied":    updated.Occupied,
-		"type":        updated.Type,
+		"type":        updated.Type, // ovo polje mora biti "type" kako bi MongoDB našao dokument
 		"amenities":   updated.Amenities,
 		"description": updated.Description,
 		"ratings":     updated.Ratings,
@@ -101,4 +100,46 @@ func (r *DormRepository) Delete(id string) error {
 
 	_, err := r.collection.DeleteOne(ctx, bson.M{"id": id})
 	return err
+}
+
+// FindByCity vraća sve domove u određenom gradu
+func (r *DormRepository) FindByCity(city string) ([]model.Dorm, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"city": city}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var dorms []model.Dorm
+	if err := cursor.All(ctx, &dorms); err != nil {
+		return nil, err
+	}
+
+	return dorms, nil
+}
+
+// FindByType vraća sve domove određene vrste smeštaja
+func (r *DormRepository) FindByType(dormType string) ([]model.Dorm, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// ✅ Ispravljen filter: koristi tačno ime polja iz MongoDB
+	filter := bson.M{"type": dormType}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var dorms []model.Dorm
+	if err := cursor.All(ctx, &dorms); err != nil {
+		return nil, err
+	}
+	return dorms, nil
 }

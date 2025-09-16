@@ -14,7 +14,7 @@ import (
 func main() {
 	uri := os.Getenv("MONGO_URI")
 	if uri == "" {
-		uri = "mongodb://mongo:27017" // obavezno koristi "mongo" jer je ime servisa u docker-compose-u
+		uri = "mongodb://mongo:27017"
 	}
 	dbName := "dormdb"
 
@@ -34,6 +34,7 @@ func main() {
 	dormService := service.NewDormService(dormRepo)
 	dormHandler := handler.NewDormHandler(dormService)
 
+	// CRUD rute
 	http.HandleFunc("/dorms", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -59,6 +60,13 @@ func main() {
 		}
 	})
 
+	// NOVO: Pretraga po gradu
+	http.HandleFunc("/dorms/search", dormHandler.SearchDormsByCityHandler)
+
+	// Filter po vrsti smeštaja
+	http.HandleFunc("/dorms/filter", dormHandler.FilterDormsByTypeHandler)
+
+	// Health check
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Dorm service is running 🚀"))
 	})
