@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"dorm-service/model"
-	"dorm-service/service"
-	"encoding/json"
-	"net/http"
+    "dorm-service/model"
+    "dorm-service/service"
+    "encoding/json"
+    "net/http"
 )
+
 
 type DormHandler struct {
 	dormService *service.DormService
@@ -96,5 +97,31 @@ func (h *DormHandler) FilterDormsByTypeHandler(w http.ResponseWriter, r *http.Re
 		http.Error(w, "Failed to fetch dorms", http.StatusInternalServerError)
 		return
 	}
+	json.NewEncoder(w).Encode(dorms)
+}
+
+// GET /dorms/stats - statistika slobodnih mesta po domovima
+func (h *DormHandler) GetOccupancyStatsHandler(w http.ResponseWriter, r *http.Request) {
+	stats, err := h.dormService.GetOccupancyStats()
+	if err != nil {
+		http.Error(w, "Failed to fetch occupancy stats", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(stats)
+}
+
+func (h *DormHandler) GetDormsSortedHandler(w http.ResponseWriter, r *http.Request) {
+	order := r.URL.Query().Get("order")
+	if order == "" {
+		order = "asc" // default rastuće
+	}
+
+	dorms, err := h.dormService.GetDormsSortedByFreeSpots(order)
+	if err != nil {
+		http.Error(w, "Failed to get sorted dorms", http.StatusInternalServerError)
+		return
+	}
+
 	json.NewEncoder(w).Encode(dorms)
 }

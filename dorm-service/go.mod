@@ -2,9 +2,7 @@ module dorm-service
 
 go 1.25.1
 
-require (
-	go.mongodb.org/mongo-driver v1.17.4
-)
+require go.mongodb.org/mongo-driver v1.17.4
 
 require (
 	github.com/golang/snappy v1.0.0 // indirect

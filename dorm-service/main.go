@@ -71,6 +71,23 @@ func main() {
 		w.Write([]byte("Dorm service is running 🚀"))
 	})
 
+	http.HandleFunc("/dorms/stats", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			dormHandler.GetOccupancyStatsHandler(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	http.HandleFunc("/dorms/sorted", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			dormHandler.GetDormsSortedHandler(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
 	port := "8081"
 	log.Println("Dorm-service running on port:", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))

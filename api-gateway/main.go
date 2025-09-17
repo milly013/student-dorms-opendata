@@ -28,7 +28,7 @@ func main() {
 	})
 
 	// -----------------------
-	// NOVO: Filter po vrsti smeštaja
+	// Filter po vrsti smeštaja
 	// GET /dorms/filter?type=muški/ženski/mešoviti
 	// -----------------------
 	mux.HandleFunc("/dorms/filter", func(w http.ResponseWriter, r *http.Request) {
@@ -36,10 +36,26 @@ func main() {
 	})
 
 	// -----------------------
-	// NOVO: Pretraga domova po gradu
+	// Pretraga domova po gradu
 	// GET /dorms/search?city=Beograd
 	// -----------------------
 	mux.HandleFunc("/dorms/search", func(w http.ResponseWriter, r *http.Request) {
+		forwardRequest(w, r, "http://dorm-service:8081")
+	})
+
+	// -----------------------
+	// NOVO: Statistika zauzetosti domova
+	// GET /dorms/stats
+	// -----------------------
+	mux.HandleFunc("/dorms/stats", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			forwardRequest(w, r, "http://dorm-service:8081")
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/dorms/sorted", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://dorm-service:8081")
 	})
 

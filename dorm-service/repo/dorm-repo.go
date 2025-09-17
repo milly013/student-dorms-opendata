@@ -143,3 +143,33 @@ func (r *DormRepository) FindByType(dormType string) ([]model.Dorm, error) {
 	}
 	return dorms, nil
 }
+
+// GetOccupancyStats vraća listu domova sa brojem slobodnih mesta
+func (r *DormRepository) GetOccupancyStats() ([]map[string]interface{}, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var dorms []model.Dorm
+	if err := cursor.All(ctx, &dorms); err != nil {
+		return nil, err
+	}
+
+	var stats []map[string]interface{}
+	for _, dorm := range dorms {
+		stats = append(stats, map[string]interface{}{
+			"id":         dorm.ID,
+			"name":       dorm.Name,
+			"capacity":   dorm.Capacity,
+			"occupied":   dorm.Occupied,
+			"free_spots": dorm.Capacity - dorm.Occupied,
+		})
+	}
+
+	return stats, nil
+}
