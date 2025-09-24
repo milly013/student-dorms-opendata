@@ -37,7 +37,6 @@ func NewUserService(repo *repo.UserRepository) *UserService {
 
 // Register kreira novog korisnika i hash-uje lozinku
 func (s *UserService) Register(user *model.User) error {
-	// Provera da li već postoji korisnik sa istim email-om
 	existingUser, err := s.repo.FindByEmail(user.Email)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return err
@@ -46,14 +45,14 @@ func (s *UserService) Register(user *model.User) error {
 		return errors.New("user with this email already exists")
 	}
 
-	// Hash lozinke
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	user.Password = string(hashedPassword)
 
-	// Ubacivanje korisnika
+	user.Role = "student"
+
 	return s.repo.Insert(user)
 }
 

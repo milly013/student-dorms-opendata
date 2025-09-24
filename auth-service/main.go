@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -53,7 +54,17 @@ func main() {
 		w.Write([]byte("Auth service is running 🚀"))
 	})
 
+	// CORS konfiguracija
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:4200"}, // Angular front
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	})
+
 	port := "8080"
 	log.Println("Auth-service running on port:", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	// Wrap router sa CORS handlerom
+	handler := c.Handler(r)
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
