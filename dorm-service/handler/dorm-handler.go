@@ -17,6 +17,14 @@ func NewDormHandler(dormService *service.DormService) *DormHandler {
 
 // POST /dorms
 func (h *DormHandler) CreateDormHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+
+	isAdmin, err := h.dormService.CheckAdmin(userID)
+	if err != nil || !isAdmin {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
 	var dorm model.Dorm
 	if err := json.NewDecoder(r.Body).Decode(&dorm); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)

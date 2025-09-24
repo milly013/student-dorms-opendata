@@ -51,7 +51,10 @@ func (s *UserService) Register(user *model.User) error {
 	}
 	user.Password = string(hashedPassword)
 
-	user.Role = "student"
+	// Ako rola nije postavljena, postavi student
+	if user.Role == "" {
+		user.Role = "student"
+	}
 
 	return s.repo.Insert(user)
 }
@@ -111,4 +114,33 @@ func (s *UserService) HealthCheck(ctx context.Context) string {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	return "Auth service is running 🚀"
+}
+
+// Vrati ulogu korisnika po email-u
+func (s *UserService) GetUserRole(ID string) (string, error) {
+	user, err := s.repo.FindByID(ID)
+	if err != nil {
+		return "", err
+	}
+	if user == nil {
+		return "", errors.New("user not found")
+	}
+	return user.Role, nil
+}
+
+// Helper funkcije
+func (s *UserService) IsAdmin(ID string) (bool, error) {
+	role, err := s.GetUserRole(ID)
+	if err != nil {
+		return false, err
+	}
+	return role == "admin", nil
+}
+
+func (s *UserService) IsStudent(ID string) (bool, error) {
+	role, err := s.GetUserRole(ID)
+	if err != nil {
+		return false, err
+	}
+	return role == "student", nil
 }

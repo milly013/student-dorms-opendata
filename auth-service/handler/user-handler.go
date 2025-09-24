@@ -118,3 +118,13 @@ func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted successfully"})
 }
+func (h *UserHandler) GetUserRoleByIDHandler(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	role, err := h.userService.GetUserRole(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"role": role})
+}
