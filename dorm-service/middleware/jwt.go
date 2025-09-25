@@ -10,17 +10,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-// Ključevi za context da ne bi došlo do konflikta
-type contextKey string
+var jwtKey = []byte(os.Getenv("JWT_SECRET"))
 
-const (
-	ContextUserIDKey contextKey = "userID"
-	ContextRoleKey   contextKey = "role"
-)
-
-var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
-
-// JWTAuth middleware validira JWT token i ubacuje userID i role u request context
 func JWTAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
@@ -29,7 +20,6 @@ func JWTAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// Mora početi sa "Bearer "
 		if !strings.HasPrefix(authHeader, "Bearer ") {
 			http.Error(w, "Invalid Authorization header format", http.StatusUnauthorized)
 			return
@@ -37,13 +27,14 @@ func JWTAuth(next http.Handler) http.Handler {
 
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
-		// Parsiranje tokena sa claims
+		// Parsiramo claims u MapClaims
 		claims := jwt.MapClaims{}
 		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+			// Provjera HMAC algoritma
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrSignatureInvalid
 			}
-			return jwtSecret, nil
+			return jwtKey, nil
 		})
 
 		if err != nil || !token.Valid {
@@ -51,22 +42,21 @@ func JWTAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		// Dohvati user_id i role iz claims
-		userID, okUser := claims["user_id"].(string)
-		role, okRole := claims["role"].(string)
+		// Type assertion za user_id i role
+		userID, ok1 := claims["user_id"].(string)
+		role, ok2 := claims["role"].(string)
 		fmt.Printf("✅ Token claims -> user_id: %s, role: %s\n", userID, role)
-
-		if !okUser || !okRole || userID == "" || role == "" {
+		if !ok1 || !ok2 || userID == "" || role == "" {
 			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 			return
 		}
 
-		// LOGOVANJE
+		// LOG: ispis claims
 		fmt.Printf("✅ Token claims -> user_id: %s, role: %s\n", userID, role)
 
-		// Ubaci u context
-		ctx := context.WithValue(r.Context(), ContextUserIDKey, userID)
-		ctx = context.WithValue(ctx, ContextRoleKey, role)
+		// Ubacivanje u context
+		ctx := context.WithValue(r.Context(), "userID", userID)
+		ctx = context.WithValue(ctx, "role", role)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
