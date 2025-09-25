@@ -33,24 +33,44 @@ func main() {
 		fmt.Println("✅ Kolekcija dorms kreirana sa validacijom")
 	}
 
+	// --- Inicijalizacija repo, servisa i handlera za dorms ---
 	dormRepo := repo.NewDormRepository(client)
 	dormService := service.NewDormService(dormRepo)
 	dormHandler := handler.NewDormHandler(dormService)
 
+	// --- Inicijalizacija repo, servisa i handlera za move-in ---
+	moveInRepo := repo.NewMoveInRequestRepository(client)
+	moveInService := service.NewMoveInService(moveInRepo)
+	moveInHandler := handler.NewMoveInHandler(moveInService)
+
 	r := mux.NewRouter()
 
-	// Health-check
+	// --- Health-check ---
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Dorm service is running 🚀"))
 	}).Methods("GET")
 
+	// --- Otvorene funkcionalnosti ---
 	r.HandleFunc("/dorms", dormHandler.GetAllDormsHandler).Methods("GET")
 	r.HandleFunc("/dorms/{id}", dormHandler.GetDormHandler).Methods("GET")
 
-	// Ove rute su zaštićene middleware-om → samo admin može dodavati, menjati, brisati
+	// --- Zaštićene rute (admin) ---
 	r.Handle("/dorms", middleware.JWTAuth(http.HandlerFunc(dormHandler.CreateDormHandler))).Methods("POST")
 	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.UpdateDormHandler))).Methods("PUT")
 	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.DeleteDormHandler))).Methods("DELETE")
+
+	// --- Move-in workflow ---
+	// STUDENT šalje zahtjev za useljenje
+	r.Handle("/dorms/{id}/movein-request", middleware.JWTAuth(http.HandlerFunc(moveInHandler.CreateMoveInRequest))).Methods("POST")
+
+	// ADMIN vidi sve zahtjeve
+	r.Handle("/dorms/movein-requests", middleware.JWTAuth(http.HandlerFunc(moveInHandler.GetAllRequests))).Methods("GET")
+
+	// ADMIN odobrava zahtjev
+	r.Handle("/dorms/movein-requests/{requestId}/approve", middleware.JWTAuth(http.HandlerFunc(moveInHandler.ApproveRequest))).Methods("POST")
+
+	// ADMIN odbija zahtjev
+	r.Handle("/dorms/movein-requests/{requestId}/reject", middleware.JWTAuth(http.HandlerFunc(moveInHandler.RejectRequest))).Methods("POST")
 
 	port := "8081"
 	log.Println("Dorm-service running on port:", port)

@@ -1,0 +1,59 @@
+package repo
+
+import (
+	"context"
+	"dorm-service/model"
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+type MoveInRequestRepository struct {
+	collection *mongo.Collection
+}
+
+func NewMoveInRequestRepository(db *mongo.Database) *MoveInRequestRepository {
+	return &MoveInRequestRepository{
+		collection: db.Collection("movein_requests"),
+	}
+}
+
+func (r *MoveInRequestRepository) Create(ctx context.Context, req *model.MoveInRequest) error {
+	req.Status = "pending"
+	req.CreatedAt = time.Now()
+	_, err := r.collection.InsertOne(ctx, req)
+	return err
+}
+
+func (r *MoveInRequestRepository) GetAll(ctx context.Context) ([]model.MoveInRequest, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var requests []model.MoveInRequest
+	for cursor.Next(ctx) {
+		var req model.MoveInRequest
+		if err := cursor.Decode(&req); err != nil {
+			return nil, err
+		}
+		requests = append(requests, req)
+	}
+	return requests, nil
+}
+
+func (r *MoveInRequestRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+	_, err := r.collection.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": bson.M{"status": status}})
+	return err
+}
+
+func (r *MoveInRequestRepository) GetByStudent(ctx context.Context, studentID string) (*model.MoveInRequest, error) {
+	var req model.MoveInRequest
+	err := r.collection.FindOne(ctx, bson.M{"student_id": studentID}).Decode(&req)
+	if err != nil {
+		return nil, err
+	}
+	return &req, nil
+}
