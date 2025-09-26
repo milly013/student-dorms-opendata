@@ -7,46 +7,48 @@ import (
 	"net/http"
 )
 
+// Middleware za CORS
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Odgovor na preflight OPTIONS zahtjev
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	mux := http.NewServeMux()
-
-	// -----------------------
 	// Auth-service rutiranje
-	// -----------------------
 	mux.HandleFunc("/auth/", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://auth-service:8080")
 	})
-
-	// -----------------------
 	// Dorm-service rutiranje (CRUD)
-	// -----------------------
 	mux.HandleFunc("/dorms", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://dorm-service:8081")
 	})
 	mux.HandleFunc("/dorms/", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://dorm-service:8081")
 	})
-
-	// -----------------------
 	// Filter po vrsti smeštaja
 	// GET /dorms/filter?type=muški/ženski/mešoviti
-	// -----------------------
 	mux.HandleFunc("/dorms/filter", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://dorm-service:8081")
 	})
-
-	// -----------------------
 	// Pretraga domova po gradu
 	// GET /dorms/search?city=Beograd
-	// -----------------------
 	mux.HandleFunc("/dorms/search", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://dorm-service:8081")
 	})
-
-	// -----------------------
 	// NOVO: Statistika zauzetosti domova
 	// GET /dorms/stats
-	// -----------------------
 	mux.HandleFunc("/dorms/stats", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			forwardRequest(w, r, "http://dorm-service:8081")
@@ -54,25 +56,20 @@ func main() {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
-
 	mux.HandleFunc("/dorms/sorted", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://dorm-service:8081")
 	})
 
-	// -----------------------
-	// Health check
-	// -----------------------
+	// Health check za API Gateway
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("API Gateway is running 🚀"))
 	})
-
 	log.Println("API Gateway running on port 8000...")
+
 	log.Fatal(http.ListenAndServe(":8000", mux))
 }
 
-// -----------------------
 // Generalna proxy funkcija
-// -----------------------
 func forwardRequest(w http.ResponseWriter, r *http.Request, targetService string) {
 	// Kreiranje punog URL-a ka ciljnom servisu
 	url := targetService + r.URL.Path
@@ -87,6 +84,7 @@ func forwardRequest(w http.ResponseWriter, r *http.Request, targetService string
 
 	// Napravi novi HTTP zahtev
 	req, err := http.NewRequest(r.Method, url, bytes.NewBuffer(body))
+
 	if err != nil {
 		http.Error(w, "Failed to create request", http.StatusInternalServerError)
 		return

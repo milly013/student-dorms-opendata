@@ -1,12 +1,14 @@
 package handler
 
 import (
-    "dorm-service/model"
-    "dorm-service/service"
-    "encoding/json"
-    "net/http"
-)
+	"dorm-service/model"
+	"dorm-service/service"
+	"encoding/json"
+	"fmt"
+	"net/http"
 
+	"github.com/gorilla/mux"
+)
 
 type DormHandler struct {
 	dormService *service.DormService
@@ -18,20 +20,59 @@ func NewDormHandler(dormService *service.DormService) *DormHandler {
 
 // --- CRUD funkcije ---
 func (h *DormHandler) CreateDormHandler(w http.ResponseWriter, r *http.Request) {
+	// Dobavi userID iz contexta
+	userIDRaw := r.Context().Value("userID")
+	roleRaw := r.Context().Value("role")
+
+	// Provjera da li su postavljeni i da li su string
+	userID, ok1 := userIDRaw.(string)
+	role, ok2 := roleRaw.(string)
+
+	if !ok1 || userID == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if !ok2 || role == "" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Logovanje za debug
+	fmt.Printf("UserID: %s, Role: %s\n", userID, role)
+
+	// Provjera da li je admin
+	if role != "admin" {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+
+	// Parsiranje tijela zahtjeva
 	var dorm model.Dorm
 	if err := json.NewDecoder(r.Body).Decode(&dorm); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
+
+	// Log ko kreira dom
+	fmt.Printf("✅ User %s (role: %s) kreira novi dom: %+v\n", userID, role, dorm)
+
+	// Kreiranje doma
 	if err := h.dormService.CreateDorm(&dorm); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// Odgovor
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Dorm created successfully"})
 }
 
-func (h *DormHandler) GetDormHandler(w http.ResponseWriter, r *http.Request, id string) {
+// GET /dorms/{id}
+func (h *DormHandler) GetDormHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
 	dorm, err := h.dormService.GetDormByID(id)
 	if err != nil || dorm == nil {
 		http.Error(w, "Dorm not found", http.StatusNotFound)
@@ -49,7 +90,11 @@ func (h *DormHandler) GetAllDormsHandler(w http.ResponseWriter, r *http.Request)
 	json.NewEncoder(w).Encode(dorms)
 }
 
-func (h *DormHandler) UpdateDormHandler(w http.ResponseWriter, r *http.Request, id string) {
+// PUT /dorms/{id}
+func (h *DormHandler) UpdateDormHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
 	var dorm model.Dorm
 	if err := json.NewDecoder(r.Body).Decode(&dorm); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -62,7 +107,11 @@ func (h *DormHandler) UpdateDormHandler(w http.ResponseWriter, r *http.Request, 
 	json.NewEncoder(w).Encode(map[string]string{"message": "Dorm updated successfully"})
 }
 
-func (h *DormHandler) DeleteDormHandler(w http.ResponseWriter, r *http.Request, id string) {
+// DELETE /dorms/{id}
+func (h *DormHandler) DeleteDormHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
 	if err := h.dormService.DeleteDorm(id); err != nil {
 		http.Error(w, "Failed to delete dorm", http.StatusInternalServerError)
 		return

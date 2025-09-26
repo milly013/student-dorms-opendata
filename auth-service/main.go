@@ -10,6 +10,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -35,16 +38,34 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
-	// Definisanje ruta
-	http.HandleFunc("/register", userHandler.RegisterHandler)
-	http.HandleFunc("/login", userHandler.LoginHandler)
-	http.Handle("/users", middleware.JWTAuth(http.HandlerFunc(userHandler.GetAllUsersHandler)))
+	r := mux.NewRouter()
 
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	// Rute za auth
+	r.HandleFunc("/register", userHandler.RegisterHandler).Methods("POST")
+	r.HandleFunc("/login", userHandler.LoginHandler).Methods("POST")
+
+	// Rute za korisnike sa JWT middleware
+	r.Handle("/users", middleware.JWTAuth(http.HandlerFunc(userHandler.GetAllUsersHandler))).Methods("GET")
+	r.Handle("/users/{id}", middleware.JWTAuth(http.HandlerFunc(userHandler.GetUserByIDHandler))).Methods("GET")
+	r.Handle("/users/{id}", middleware.JWTAuth(http.HandlerFunc(userHandler.DeleteUserHandler))).Methods("DELETE")
+	r.Handle("/role/{id}", middleware.JWTAuth(http.HandlerFunc(userHandler.GetUserRoleByIDHandler))).Methods("GET")
+
+	// Health check
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Auth service is running 🚀"))
 	})
 
+	// CORS konfiguracija
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:4200"}, // Angular front
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
+		AllowCredentials: true,
+	})
+
 	port := "8080"
-	log.Println("Auth-service running on port: ", port)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Auth-service running on port:", port)
+	// Wrap router sa CORS handlerom
+	handler := c.Handler(r)
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }

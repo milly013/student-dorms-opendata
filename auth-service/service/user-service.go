@@ -16,9 +16,10 @@ import (
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
-func GenerateJWT(userID string) (string, error) {
+func GenerateJWT(userID string, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
+		"role":    role,
 		"exp":     time.Now().Add(time.Hour * 24).Unix(), // token traje 24h
 	}
 
@@ -37,7 +38,6 @@ func NewUserService(repo *repo.UserRepository) *UserService {
 
 // Register kreira novog korisnika i hash-uje lozinku
 func (s *UserService) Register(user *model.User) error {
-	// Provera da li već postoji korisnik sa istim email-om
 	existingUser, err := s.repo.FindByEmail(user.Email)
 	if err != nil && err != mongo.ErrNoDocuments {
 		return err
@@ -46,14 +46,17 @@ func (s *UserService) Register(user *model.User) error {
 		return errors.New("user with this email already exists")
 	}
 
-	// Hash lozinke
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
 	user.Password = string(hashedPassword)
 
-	// Ubacivanje korisnika
+	// Ako rola nije postavljena, postavi student
+	if user.Role == "" {
+		user.Role = "student"
+	}
+
 	return s.repo.Insert(user)
 }
 
@@ -90,9 +93,21 @@ func (s *UserService) ChangePassword(email, newPassword string) error {
 	return s.repo.UpdatePassword(email, string(hashedPassword))
 }
 
-// DeleteUser briše korisnika po email-u
-func (s *UserService) DeleteUser(email string) error {
-	return s.repo.DeleteByEmail(email)
+// GetUserByID vraća korisnika po ID-u
+func (s *UserService) GetUserByID(id string) (*model.User, error) {
+	user, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+	return user, nil
+}
+
+// DeleteUserByID briše korisnika po ID-u
+func (s *UserService) DeleteUserByID(id string) error {
+	return s.repo.DeleteByID(id)
 }
 
 // HealthCheck (opciono) - jednostavan health check
@@ -100,4 +115,33 @@ func (s *UserService) HealthCheck(ctx context.Context) string {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	return "Auth service is running 🚀"
+}
+
+// Vrati ulogu korisnika po email-u
+func (s *UserService) GetUserRole(ID string) (string, error) {
+	user, err := s.repo.FindByID(ID)
+	if err != nil {
+		return "", err
+	}
+	if user == nil {
+		return "", errors.New("user not found")
+	}
+	return user.Role, nil
+}
+
+// Helper funkcije
+func (s *UserService) IsAdmin(ID string) (bool, error) {
+	role, err := s.GetUserRole(ID)
+	if err != nil {
+		return false, err
+	}
+	return role == "admin", nil
+}
+
+func (s *UserService) IsStudent(ID string) (bool, error) {
+	role, err := s.GetUserRole(ID)
+	if err != nil {
+		return false, err
+	}
+	return role == "student", nil
 }

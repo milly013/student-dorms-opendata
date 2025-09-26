@@ -3,7 +3,10 @@ package service
 import (
 	"dorm-service/model"
 	"dorm-service/repo"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
 	"sort"
 )
 
@@ -16,8 +19,8 @@ func NewDormService(repo *repo.DormRepository) *DormService {
 }
 
 // --- CRUD funkcije ---
-
 func (s *DormService) CreateDorm(dorm *model.Dorm) error {
+	// Možeš dodati validacije ako želiš
 	if dorm.Capacity < dorm.Occupied {
 		return errors.New("occupied cannot be greater than capacity")
 	}
@@ -87,4 +90,25 @@ func (s *DormService) GetDormsSortedByFreeSpots(order string) ([]model.Dorm, err
 	}
 
 	return dorms, nil
+}
+
+func (s *DormService) CheckAdmin(userID string) (bool, error) {
+	resp, err := http.Get("http://auth-service:8080/role/" + userID)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("failed to get user role")
+	}
+
+	var data map[string]string
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return false, err
+	}
+
+	role := data["role"]
+	return role == "admin", nil
 }

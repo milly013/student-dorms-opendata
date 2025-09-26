@@ -4,7 +4,10 @@ import (
 	"auth-service/model"
 	"auth-service/service"
 	"encoding/json"
+	"fmt"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 type UserHandler struct {
@@ -60,16 +63,20 @@ func (h *UserHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generisanje JWT tokena
-	token, err := service.GenerateJWT(user.ID.Hex())
+	token, err := service.GenerateJWT(user.ID.Hex(), user.Role)
 	if err != nil {
 		http.Error(w, "Could not generate token", http.StatusInternalServerError)
 		return
 	}
 
+	// LOGOVANJE podataka koji idu u token
+	fmt.Printf("🔑 User logged in -> user_id: %s, role: %s\n", user.ID.Hex(), user.Role)
+
 	// Vraćanje jednog JSON odgovora
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Login successful",
 		"userId":  user.ID.Hex(),
+		"role":    user.Role,
 		"token":   token,
 	})
 }
@@ -88,4 +95,41 @@ func (h *UserHandler) GetAllUsersHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	json.NewEncoder(w).Encode(users)
+}
+
+// GetUserByIDHandler -> GET /users/{id}
+func (h *UserHandler) GetUserByIDHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	user, err := h.userService.GetUserByID(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(user)
+}
+
+// DeleteUserHandler -> DELETE /users/{id}
+func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if err := h.userService.DeleteUserByID(id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "User deleted successfully"})
+}
+func (h *UserHandler) GetUserRoleByIDHandler(w http.ResponseWriter, r *http.Request) {
+	id := mux.Vars(r)["id"]
+	role, err := h.userService.GetUserRole(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"role": role})
 }

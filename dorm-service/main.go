@@ -3,12 +3,16 @@ package main
 import (
 	"dorm-service/db"
 	"dorm-service/handler"
+	"dorm-service/middleware"
 	"dorm-service/repo"
 	"dorm-service/service"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -47,14 +51,14 @@ func main() {
 	})
 
 	http.HandleFunc("/dorms/", func(w http.ResponseWriter, r *http.Request) {
-		id := r.URL.Path[len("/dorms/"):]
+		// id := r.URL.Path[len("/dorms/"):]
 		switch r.Method {
 		case http.MethodGet:
-			dormHandler.GetDormHandler(w, r, id)
+			dormHandler.GetDormHandler(w, r)
 		case http.MethodPut:
-			dormHandler.UpdateDormHandler(w, r, id)
+			dormHandler.UpdateDormHandler(w, r)
 		case http.MethodDelete:
-			dormHandler.DeleteDormHandler(w, r, id)
+			dormHandler.DeleteDormHandler(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
@@ -66,9 +70,27 @@ func main() {
 	// Filter po vrsti smeštaja
 	http.HandleFunc("/dorms/filter", dormHandler.FilterDormsByTypeHandler)
 
-	// Health check
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	r := mux.NewRouter()
+
+	// Health-check
+	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+
 		w.Write([]byte("Dorm service is running 🚀"))
+	}).Methods("GET")
+
+	r.HandleFunc("/dorms", dormHandler.GetAllDormsHandler).Methods("GET")
+	r.HandleFunc("/dorms/{id}", dormHandler.GetDormHandler).Methods("GET")
+
+	// Ove rute su zaštićene middleware-om → samo admin može dodavati, menjati, brisati
+	r.Handle("/dorms", middleware.JWTAuth(http.HandlerFunc(dormHandler.CreateDormHandler))).Methods("POST")
+	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.UpdateDormHandler))).Methods("PUT")
+	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.DeleteDormHandler))).Methods("DELETE")
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:4200"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
 	})
 
 	http.HandleFunc("/dorms/stats", func(w http.ResponseWriter, r *http.Request) {
@@ -90,5 +112,6 @@ func main() {
 
 	port := "8081"
 	log.Println("Dorm-service running on port:", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, r))
+	log.Fatal(http.ListenAndServe(":"+port, c.Handler(r)))
 }

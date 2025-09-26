@@ -1,0 +1,27 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h2 class="card-title text-center mb-4">Prijava</h2>
+
+          <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+            <div class="mb-3">
+              <label for="email" class="form-label">Email:</label>
+              <input type="email" id="email" name="email" class="form-control" [(ngModel)]="email" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Lozinka:</label>
+              <input type="password" id="password" name="password" class="form-control" [(ngModel)]="password" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Prijavi se</button>
+          </form>
+
+          <p *ngIf="errorMessage" class="text-danger mt-3 text-center">{{ errorMessage }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

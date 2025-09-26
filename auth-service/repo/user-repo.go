@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -78,5 +79,40 @@ func (r *UserRepository) DeleteByEmail(email string) error {
 	defer cancel()
 
 	_, err := r.collection.DeleteOne(ctx, bson.M{"email": email})
+	return err
+}
+
+// FindByID pronalazi korisnika po ID-u
+func (r *UserRepository) FindByID(id string) (*model.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var user model.User
+	err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&user)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+// DeleteByID briše korisnika po ID-u
+func (r *UserRepository) DeleteByID(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objID})
 	return err
 }
