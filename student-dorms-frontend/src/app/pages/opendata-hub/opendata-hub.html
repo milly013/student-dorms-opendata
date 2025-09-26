@@ -1,0 +1,15 @@
+<div class="container my-5">
+  <h2 class="mb-4 text-center">Open-Data Hub – Statistika Studentskih Domova</h2>
+
+  <div class="row g-4">
+    <div class="col-md-4" *ngFor="let stat of statistics">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">{{ stat.title }}</h5>
+          <p class="card-text">{{ stat.description }}</p>
+          <a [routerLink]="stat.route" class="btn btn-primary mt-auto">Pogledaj</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

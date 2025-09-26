@@ -1,0 +1,23 @@
+<div *ngIf="dorm" class="container mt-4">
+  <h2>{{ dorm.name }}</h2>
+  <p><strong>Adresa:</strong> {{ dorm.address }}, {{ dorm.city }}</p>
+  <p><strong>Tip:</strong> {{ dorm.type }}</p>
+  <p><strong>Kapacitet:</strong> {{ dorm.capacity }}</p>
+  <p><strong>Zauzeto:</strong> {{ dorm.occupied }}</p>
+
+  <h4>Sadržaji</h4>
+  <ul>
+    <li *ngFor="let amenity of dorm.amenities">{{ amenity }}</li>
+  </ul>
+
+  <h4>Opis</h4>
+  <p>{{ dorm.description }}</p>
+
+  <h4>Komentari</h4>
+  <ul>
+    <li *ngFor="let comment of dorm.comments">
+      <strong>{{ comment.user_id }}:</strong> {{ comment.message }}
+      <small>({{ comment.date }})</small>
+    </li>
+  </ul>
+</div>
