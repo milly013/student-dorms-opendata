@@ -1,1 +1,27 @@
-<p>dorms works!</p>
+<div class="container mt-4">
+  <h2>Dostupni domovi</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Naziv</th>
+        <th>Grad</th>
+        <th>Kapacitet</th>
+        <th>Zauzeto</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let dorm of dorms">
+        <td>{{ dorm.name }}</td>
+        <td>{{ dorm.city }}</td>
+        <td>{{ dorm.capacity }}</td>
+        <td>{{ dorm.occupied }}</td>
+        <td>
+          <button class="btn btn-primary btn-sm" (click)="viewDorm(dorm.id)">
+            Pregledaj
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

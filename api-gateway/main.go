@@ -7,39 +7,67 @@ import (
 	"strings"
 )
 
+// Middleware za CORS
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:4200")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Odgovor na preflight OPTIONS zahtjev
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
+	mux := http.NewServeMux()
+
 	// Rutiranje za auth-service
-	http.HandleFunc("/auth/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/auth/", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://auth-service:8080", "/auth")
 	})
 
 	// Rutiranje za dorm-service
-	http.HandleFunc("/dorms/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/dorms/", func(w http.ResponseWriter, r *http.Request) {
 		forwardRequest(w, r, "http://dorm-service:8081", "/dorms")
 	})
 
+	// Rutiranje za request-service (podržava i /requests i /requests/)
+	mux.HandleFunc("/requests", func(w http.ResponseWriter, r *http.Request) {
+		forwardRequest(w, r, "http://request-service:8083", "/requests")
+	})
+	mux.HandleFunc("/requests/", func(w http.ResponseWriter, r *http.Request) {
+		forwardRequest(w, r, "http://request-service:8083", "/requests")
+	})
+
+	// Rutiranje za opendata-service
+	mux.HandleFunc("/opendata/", func(w http.ResponseWriter, r *http.Request) {
+		forwardRequest(w, r, "http://opendata-service:8082", "/opendata")
+	})
+
 	// Health check za API Gateway
-	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("API Gateway is running 🚀"))
 	})
 
 	log.Println("API Gateway running on port 8000...")
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	log.Fatal(http.ListenAndServe(":8000", enableCORS(mux)))
 }
 
 // Generalizovana proxy funkcija
 func forwardRequest(w http.ResponseWriter, r *http.Request, targetService, prefix string) {
-	// Ukloni prefix iz URL putanje
 	trimmedPath := strings.TrimPrefix(r.URL.Path, prefix)
-
-	// Ako je rezultat prazan, koristi "/"
 	if trimmedPath == "" {
 		trimmedPath = "/"
 	}
 
 	fullURL := targetService + trimmedPath
 
-	// Napravi novi zahtev ka ciljnom servisu
 	req, err := http.NewRequest(r.Method, fullURL, r.Body)
 	if err != nil {
 		http.Error(w, "Failed to create request", http.StatusInternalServerError)

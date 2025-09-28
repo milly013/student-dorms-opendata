@@ -38,11 +38,6 @@ func main() {
 	dormService := service.NewDormService(dormRepo)
 	dormHandler := handler.NewDormHandler(dormService)
 
-	// --- Inicijalizacija repo, servisa i handlera za move-in ---
-	moveInRepo := repo.NewMoveInRequestRepository(client)
-	moveInService := service.NewMoveInService(moveInRepo)
-	moveInHandler := handler.NewMoveInHandler(moveInService)
-
 	r := mux.NewRouter()
 
 	// --- Health-check ---
@@ -58,19 +53,6 @@ func main() {
 	r.Handle("/dorms", middleware.JWTAuth(http.HandlerFunc(dormHandler.CreateDormHandler))).Methods("POST")
 	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.UpdateDormHandler))).Methods("PUT")
 	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.DeleteDormHandler))).Methods("DELETE")
-
-	// --- Move-in workflow ---
-	// STUDENT šalje zahtjev za useljenje
-	r.Handle("/dorms/{id}/movein-request", middleware.JWTAuth(http.HandlerFunc(moveInHandler.CreateMoveInRequest))).Methods("POST")
-
-	// ADMIN vidi sve zahtjeve
-	r.Handle("/dorms/movein-requests", middleware.JWTAuth(http.HandlerFunc(moveInHandler.GetAllRequests))).Methods("GET")
-
-	// ADMIN odobrava zahtjev
-	r.Handle("/dorms/movein-requests/{requestId}/approve", middleware.JWTAuth(http.HandlerFunc(moveInHandler.ApproveRequest))).Methods("POST")
-
-	// ADMIN odbija zahtjev
-	r.Handle("/dorms/movein-requests/{requestId}/reject", middleware.JWTAuth(http.HandlerFunc(moveInHandler.RejectRequest))).Methods("POST")
 
 	port := "8081"
 	log.Println("Dorm-service running on port:", port)
