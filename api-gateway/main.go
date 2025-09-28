@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bytes"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 )
 
 // Middleware za CORS
@@ -26,38 +26,20 @@ func enableCORS(next http.Handler) http.Handler {
 
 func main() {
 	mux := http.NewServeMux()
-	// Auth-service rutiranje
+
+	// Rutiranje za auth-service
 	mux.HandleFunc("/auth/", func(w http.ResponseWriter, r *http.Request) {
-		forwardRequest(w, r, "http://auth-service:8080")
+		forwardRequest(w, r, "http://auth-service:8080", "/auth")
 	})
-	// Dorm-service rutiranje (CRUD)
-	mux.HandleFunc("/dorms", func(w http.ResponseWriter, r *http.Request) {
-		forwardRequest(w, r, "http://dorm-service:8081")
-	})
+
+	// Rutiranje za dorm-service
 	mux.HandleFunc("/dorms/", func(w http.ResponseWriter, r *http.Request) {
-		forwardRequest(w, r, "http://dorm-service:8081")
+		forwardRequest(w, r, "http://dorm-service:8081", "/dorms")
 	})
-	// Filter po vrsti smeštaja
-	// GET /dorms/filter?type=muški/ženski/mešoviti
-	mux.HandleFunc("/dorms/filter", func(w http.ResponseWriter, r *http.Request) {
-		forwardRequest(w, r, "http://dorm-service:8081")
-	})
-	// Pretraga domova po gradu
-	// GET /dorms/search?city=Beograd
-	mux.HandleFunc("/dorms/search", func(w http.ResponseWriter, r *http.Request) {
-		forwardRequest(w, r, "http://dorm-service:8081")
-	})
-	// NOVO: Statistika zauzetosti domova
-	// GET /dorms/stats
-	mux.HandleFunc("/dorms/stats", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			forwardRequest(w, r, "http://dorm-service:8081")
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-	mux.HandleFunc("/dorms/sorted", func(w http.ResponseWriter, r *http.Request) {
-		forwardRequest(w, r, "http://dorm-service:8081")
+
+	// Rutiranje za opendata-service
+	mux.HandleFunc("/opendata/", func(w http.ResponseWriter, r *http.Request) {
+		forwardRequest(w, r, "http://opendata-service:8082", "/opendata")
 	})
 
 	// Rutiranje za request-service (podržava i /requests i /requests/)
@@ -68,36 +50,30 @@ func main() {
 		forwardRequest(w, r, "http://request-service:8083", "/requests")
 	})
 
-	// Rutiranje za opendata-service
-	mux.HandleFunc("/opendata/", func(w http.ResponseWriter, r *http.Request) {
-		forwardRequest(w, r, "http://opendata-service:8082", "/opendata")
-	})
+	// // Rutiranje za opendata-service
+	// mux.HandleFunc("/opendata/", func(w http.ResponseWriter, r *http.Request) {
+	// 	forwardRequest(w, r, "http://opendata-service:8082", "/opendata")
+	// })
 
 	// Health check za API Gateway
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("API Gateway is running 🚀"))
 	})
-	log.Println("API Gateway running on port 8000...")
 
-	log.Fatal(http.ListenAndServe(":8000", mux))
+	log.Println("API Gateway running on port 8000...")
+	log.Fatal(http.ListenAndServe(":8000", enableCORS(mux)))
 }
 
-// Generalna proxy funkcija
-func forwardRequest(w http.ResponseWriter, r *http.Request, targetService string) {
-	// Kreiranje punog URL-a ka ciljnom servisu
-	url := targetService + r.URL.Path
-	if r.URL.RawQuery != "" {
-		url += "?" + r.URL.RawQuery
+// Generalizovana proxy funkcija
+func forwardRequest(w http.ResponseWriter, r *http.Request, targetService, prefix string) {
+	trimmedPath := strings.TrimPrefix(r.URL.Path, prefix)
+	if trimmedPath == "" {
+		trimmedPath = "/"
 	}
 
-	var body []byte
-	if r.Body != nil {
-		body, _ = io.ReadAll(r.Body)
-	}
+	fullURL := targetService + trimmedPath
 
-	// Napravi novi HTTP zahtev
-	req, err := http.NewRequest(r.Method, url, bytes.NewBuffer(body))
-
+	req, err := http.NewRequest(r.Method, fullURL, r.Body)
 	if err != nil {
 		http.Error(w, "Failed to create request", http.StatusInternalServerError)
 		return
@@ -105,7 +81,6 @@ func forwardRequest(w http.ResponseWriter, r *http.Request, targetService string
 
 	req.Header = r.Header
 
-	// Pošalji zahtev
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -114,7 +89,6 @@ func forwardRequest(w http.ResponseWriter, r *http.Request, targetService string
 	}
 	defer resp.Body.Close()
 
-	// Prosledi response
 	for k, v := range resp.Header {
 		w.Header()[k] = v
 	}

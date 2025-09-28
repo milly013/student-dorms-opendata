@@ -1,15 +1,16 @@
 package model
 
 type OpenDorm struct {
-	ID            string
-	Name          string
-	City          string
-	Capacity      int
-	Occupied      int
-	OccupancyRate float64
-	Type          string
-	Amenities     []string
-	AverageRating float64
-	CommentsCount int
-	Tags          []string
+	ID            string   `json:"id"`
+	Name          string   `json:"name"`
+	City          string   `json:"city"`
+	Capacity      int      `json:"capacity"`
+	Occupied      int      `json:"occupied"`
+	OccupancyRate float64  `json:"occupancy_rate"`
+	Type          string   `json:"type"`
+	Amenities     []string `json:"amenities"`
+	AverageRating float64  `json:"average_rating"`
+	CommentsCount int      `json:"comments_count"`
+	Tags          []string `json:"tags"`
+	Price         float64  `json:"price"` // Dodano polje za cijenu
 }

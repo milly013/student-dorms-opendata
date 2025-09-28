@@ -60,3 +60,15 @@ func (s *OpenDormService) FilterDorms(minCapacity, maxCapacity int, dormType str
 
 	return dorms, nil
 }
+
+func (s *OpenDormService) GetAveragePricePerCity() (map[string]float64, error) {
+	return s.repo.GetAveragePricePerCity()
+}
+
+func (s *OpenDormService) GetFreeSpotsPerCity() (map[string]int, error) {
+	return s.repo.GetFreeSpotsPerCity()
+}
+
+func (s *OpenDormService) GetOccupancyPerCity() (map[string]float64, error) {
+	return s.repo.GetOccupancyPerCity()
+}

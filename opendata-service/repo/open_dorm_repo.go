@@ -85,3 +85,106 @@ func (r *OpenDormRepository) FilterByCapacityOrType(minCapacity, maxCapacity int
 
 	return dorms, nil
 }
+
+func (r *OpenDormRepository) GetAveragePricePerCity() (map[string]float64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: "$city"},
+			{Key: "averagePrice", Value: bson.D{{Key: "$avg", Value: "$price"}}},
+		}}},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	results := make(map[string]float64)
+	for cursor.Next(ctx) {
+		var result struct {
+			City         string  `bson:"_id"`
+			AveragePrice float64 `bson:"averagePrice"`
+		}
+		if err := cursor.Decode(&result); err != nil {
+			return nil, err
+		}
+		results[result.City] = result.AveragePrice
+	}
+
+	return results, nil
+}
+func (r *OpenDormRepository) GetFreeSpotsPerCity() (map[string]int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// MongoDB aggregation pipeline
+	pipeline := mongo.Pipeline{
+		{{"$group", bson.D{
+			{"_id", "$city"},
+			{"totalFreeSpots", bson.D{{"$sum", bson.D{{"$subtract", []interface{}{"$capacity", "$occupied"}}}}}},
+		}}},
+		{{"$sort", bson.D{{"totalFreeSpots", -1}}}},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	result := make(map[string]int)
+	for cursor.Next(ctx) {
+		var row struct {
+			City           string `bson:"_id"`
+			TotalFreeSpots int    `bson:"totalFreeSpots"`
+		}
+		if err := cursor.Decode(&row); err != nil {
+			return nil, err
+		}
+		result[row.City] = row.TotalFreeSpots
+	}
+
+	return result, nil
+}
+
+func (r *OpenDormRepository) GetOccupancyPerCity() (map[string]float64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	pipeline := mongo.Pipeline{
+		{{"$group", bson.D{
+			{"_id", "$city"},
+			{"totalCapacity", bson.D{{"$sum", "$capacity"}}},
+			{"totalOccupied", bson.D{{"$sum", "$occupied"}}},
+		}}},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	results := make(map[string]float64)
+	for cursor.Next(ctx) {
+		var r struct {
+			City          string `bson:"_id"`
+			TotalCapacity int    `bson:"totalCapacity"`
+			TotalOccupied int    `bson:"totalOccupied"`
+		}
+		if err := cursor.Decode(&r); err != nil {
+			return nil, err
+		}
+		if r.TotalCapacity > 0 {
+			results[r.City] = float64(r.TotalOccupied) / float64(r.TotalCapacity) * 100
+		} else {
+			results[r.City] = 0
+		}
+	}
+
+	return results, nil
+}

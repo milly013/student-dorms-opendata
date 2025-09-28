@@ -40,6 +40,10 @@ func main() {
 	r.HandleFunc("/open-dorms", dormHandler.GetAllOpenDormsHandler).Methods("GET")
 	r.HandleFunc("/open-dorms/{id}", dormHandler.GetDormHandler).Methods("GET")
 	r.HandleFunc("/open-dorms/filter", dormHandler.FilterHandler).Methods("GET")
+	r.HandleFunc("/avg-price", dormHandler.GetAveragePriceHandler).Methods("GET")
+	r.HandleFunc("/cities/free-spots", dormHandler.GetFreeSpotsPerCityHandler).Methods("GET")
+	r.HandleFunc("/trends/occupancy", dormHandler.GetOccupancyPerCityHandler).Methods("GET")
+
 	// r.HandleFunc("/open-dorms/stats", dormHandler.GetStatsHandler).Methods("GET")
 	// r.HandleFunc("/open-dorms/recommend", dormHandler.RecommendHandler).Methods("GET")
 	// r.HandleFunc("/open-dorms/comments", dormHandler.CommentsHandler).Methods("POST")
