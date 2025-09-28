@@ -14,7 +14,7 @@ export class OpenDataHubComponent {
     {
       title: 'Prosječna cijena po gradu',
       description: 'Pregledajte prosječnu cijenu smještaja u različitim gradovima.',
-      route: '/opendata/avg-price'
+      route: '/opendata/prices'
     },
     {
       title: 'Distribucija tipova domova',

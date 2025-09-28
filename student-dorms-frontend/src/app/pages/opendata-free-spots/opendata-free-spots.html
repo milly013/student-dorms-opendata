@@ -1,0 +1,37 @@
+<div *ngIf="loading">Učitavanje podataka...</div>
+<div *ngIf="error">{{ error }}</div>
+
+<div *ngFor="let cityData of cityDorms" class="city-table mb-4 d-flex align-items-start">
+  <div class="me-4">
+    <h3>{{ cityData.city }}</h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Dom</th>
+          <th>Slobodna mesta</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let dorm of cityData.dorms">
+          <td>{{ dorm.name }}</td>
+          <td>{{ dorm.freeSpots }}</td>
+        </tr>
+        <tr class="fw-bold">
+          <td>Ukupno slobodnih mesta</td>
+          <td>{{ cityData.totalFreeSpots }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pie chart pored tabele -->
+  <div style="width: 200px; height: 200px;">
+    <canvas
+      baseChart
+      [data]="getPieChartData(cityData.city)"
+      [type]="pieChartType"
+      [options]="pieChartOptions"
+      [legend]="pieChartLegend">
+    </canvas>
+  </div>
+</div>

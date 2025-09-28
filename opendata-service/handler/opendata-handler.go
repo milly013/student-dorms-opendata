@@ -65,3 +65,36 @@ func (h *OpenDormHandler) FilterHandler(w http.ResponseWriter, r *http.Request) 
 func (h *OpenDormHandler) HealthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Open Data Service is running 🚀"))
 }
+
+func (h *OpenDormHandler) GetAveragePriceHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := h.service.GetAveragePricePerCity()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+func (h *OpenDormHandler) GetFreeSpotsPerCityHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := h.service.GetFreeSpotsPerCity()
+	if err != nil {
+		http.Error(w, "Error fetching free spots", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(data)
+}
+
+func (h *OpenDormHandler) GetOccupancyPerCityHandler(w http.ResponseWriter, r *http.Request) {
+	occupancy, err := h.service.GetOccupancyPerCity()
+	if err != nil {
+		http.Error(w, "Failed to get occupancy data", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(occupancy)
+}

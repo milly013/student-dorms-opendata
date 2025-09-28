@@ -8,6 +8,7 @@ export interface Dorm {
   address: string;
   city: string;
   capacity: number;
+  price: number;
   occupied: number;
   type: string;
   amenities: string[];

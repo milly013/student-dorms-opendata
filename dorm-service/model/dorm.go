@@ -5,6 +5,7 @@ type Dorm struct {
 	Name        string   `json:"name"`
 	Address     string   `json:"address"`
 	City        string   `json:"city"`
+	Price       float64  `json:"price"`
 	Capacity    int      `json:"capacity"`
 	Occupied    int      `json:"occupied"`  // trenutno zauzetih mesta
 	Type        string   `json:"type"`      // npr. "muški", "ženski", "mešoviti"

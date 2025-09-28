@@ -1,0 +1,24 @@
+<div *ngIf="loading">Učitavanje podataka...</div>
+<div *ngIf="error">{{ error }}</div>
+
+<div *ngFor="let cityData of cityDorms" class="city-table mb-4">
+  <h3>{{ cityData.city }}</h3>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Dom</th>
+        <th>Cijena</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let dorm of cityData.dorms">
+        <td>{{ dorm.name }}</td>
+        <td>{{ dorm.price | currency:'EUR':'symbol':'1.0-0' }}</td>
+      </tr>
+      <tr class="fw-bold">
+        <td>Prosječna cijena</td>
+        <td>{{ cityData.averagePrice | currency:'EUR':'symbol':'1.0-0' }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
