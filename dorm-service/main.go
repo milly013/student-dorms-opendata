@@ -34,6 +34,7 @@ func main() {
 		fmt.Println("✅ Kolekcija dorms kreirana sa validacijom")
 	}
 
+	// --- Inicijalizacija repo, servisa i handlera za dorms ---
 	dormRepo := repo.NewDormRepository(client)
 	dormService := service.NewDormService(dormRepo)
 	dormHandler := handler.NewDormHandler(dormService)
@@ -72,16 +73,17 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// Health-check
+	// --- Health-check ---
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 
 		w.Write([]byte("Dorm service is running 🚀"))
 	}).Methods("GET")
 
+	// --- Otvorene funkcionalnosti ---
 	r.HandleFunc("/dorms", dormHandler.GetAllDormsHandler).Methods("GET")
 	r.HandleFunc("/dorms/{id}", dormHandler.GetDormHandler).Methods("GET")
 
-	// Ove rute su zaštićene middleware-om → samo admin može dodavati, menjati, brisati
+	// --- Zaštićene rute (admin) ---
 	r.Handle("/dorms", middleware.JWTAuth(http.HandlerFunc(dormHandler.CreateDormHandler))).Methods("POST")
 	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.UpdateDormHandler))).Methods("PUT")
 	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.DeleteDormHandler))).Methods("DELETE")
@@ -113,5 +115,4 @@ func main() {
 	port := "8081"
 	log.Println("Dorm-service running on port:", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
-	log.Fatal(http.ListenAndServe(":"+port, c.Handler(r)))
 }

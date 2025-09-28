@@ -60,6 +60,19 @@ func main() {
 		forwardRequest(w, r, "http://dorm-service:8081")
 	})
 
+	// Rutiranje za request-service (podržava i /requests i /requests/)
+	mux.HandleFunc("/requests", func(w http.ResponseWriter, r *http.Request) {
+		forwardRequest(w, r, "http://request-service:8083", "/requests")
+	})
+	mux.HandleFunc("/requests/", func(w http.ResponseWriter, r *http.Request) {
+		forwardRequest(w, r, "http://request-service:8083", "/requests")
+	})
+
+	// Rutiranje za opendata-service
+	mux.HandleFunc("/opendata/", func(w http.ResponseWriter, r *http.Request) {
+		forwardRequest(w, r, "http://opendata-service:8082", "/opendata")
+	})
+
 	// Health check za API Gateway
 	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("API Gateway is running 🚀"))

@@ -12,7 +12,6 @@ services:
       - MONGO_URI=mongodb://mongo:27017/authdb
       - JWT_SECRET=moj-tajni_kljuc
 
-
   dorm-service:
     build: ./dorm-service
     container_name: dorm-service
@@ -35,6 +34,19 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/dormdb
 
+  request-service:
+    build: ./request-service
+    container_name: request-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mongo
+      - auth-service
+      - dorm-service
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/requestdb
+      - JWT_SECRET=moj-tajni_kljuc
+
   mongo:
     image: mongo:6
     container_name: mongo
@@ -51,7 +63,7 @@ services:
       - auth-service
       - dorm-service
       - opendata-service
-
+      - request-service
 
 volumes:
   mongo_data:
