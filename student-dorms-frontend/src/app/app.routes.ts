@@ -5,6 +5,8 @@ import { DormDetailComponent } from './pages/dorm-detail/dorm-detail';
 import { OpenDataHubComponent } from './pages/opendata-hub/opendata-hub';
 import { OpendataPrices } from './pages/opendata-prices/opendata-prices';
 import { OpendataFreeSpots } from './pages/opendata-free-spots/opendata-free-spots';
+import { OpendataFacilities } from './pages/opendata-facilities/opendata-facilities';
+import { OpendataAvgratingimplements } from './pages/opendata-avgrating/opendata-avgrating';
 
 
 export const routes: Routes = [
@@ -14,6 +16,8 @@ export const routes: Routes = [
   { path: 'dorms/:id', component: DormDetailComponent },
   { path: 'opendata', component: OpenDataHubComponent },
   { path: 'opendata/prices', component: OpendataPrices },
-  { path: 'opendata/free-spots', component: OpendataFreeSpots}
+  { path: 'opendata/free-spots', component: OpendataFreeSpots},
+  { path: 'opendata/facilities', component: OpendataFacilities},
+  { path: 'opendata/avgRating', component: OpendataAvgratingimplements},
 
 ];

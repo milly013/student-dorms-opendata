@@ -208,3 +208,43 @@ func (h *DormHandler) GetDormsSortedHandler(w http.ResponseWriter, r *http.Reque
 
 	json.NewEncoder(w).Encode(dorms)
 }
+
+func (h *DormHandler) AddRatingHandler(w http.ResponseWriter, r *http.Request) {
+	type RatingRequest struct {
+		DormID string  `json:"dorm_id"`
+		Score  float64 `json:"score"`
+	}
+
+	// Sigurno uzimanje userID iz konteksta
+	userIDRaw := r.Context().Value("userID")
+	userID, ok := userIDRaw.(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized: userID missing", http.StatusUnauthorized)
+		return
+	}
+
+	// Parsiranje body-ja
+	var req RatingRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.DormID == "" {
+		http.Error(w, "Dorm ID is required", http.StatusBadRequest)
+		return
+	}
+
+	if req.Score < 1 || req.Score > 5 {
+		http.Error(w, "Score must be between 1 and 5", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.dormService.AddRating(req.DormID, userID, req.Score); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to add rating: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Rating added successfully"})
+}

@@ -43,6 +43,7 @@ func main() {
 	r.HandleFunc("/avg-price", dormHandler.GetAveragePriceHandler).Methods("GET")
 	r.HandleFunc("/cities/free-spots", dormHandler.GetFreeSpotsPerCityHandler).Methods("GET")
 	r.HandleFunc("/trends/occupancy", dormHandler.GetOccupancyPerCityHandler).Methods("GET")
+	r.HandleFunc("/facilities/summary", dormHandler.GetFacilitiesSummaryHandler).Methods("GET")
 
 	// r.HandleFunc("/open-dorms/stats", dormHandler.GetStatsHandler).Methods("GET")
 	// r.HandleFunc("/open-dorms/recommend", dormHandler.RecommendHandler).Methods("GET")

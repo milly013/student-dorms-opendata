@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container-fluid">
-    <a class="navbar-brand" routerLink="/">Student Dorms</a>
+      <a class="navbar-brand" (click)="goHome()">Student Dorms</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
       aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
@@ -8,8 +8,14 @@
 
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
+        <!-- Prikazuje Login ako korisnik NIJE ulogovan -->
+        <li class="nav-item" *ngIf="!authService.isLoggedIn()">
           <a class="nav-link" routerLink="/login">Login</a>
+        </li>
+
+        <!-- Prikazuje Logout ako korisnik JESTE ulogovan -->
+        <li class="nav-item" *ngIf="authService.isLoggedIn()">
+          <a class="nav-link" (click)="logout()">Logout</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" routerLink="/dorms">Dorms</a>

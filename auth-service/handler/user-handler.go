@@ -133,3 +133,29 @@ func (h *UserHandler) GetUserRoleByIDHandler(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"role": role})
 }
+
+// POST /users/{id}/in-dorm – postavi studenta u dom
+func (h *UserHandler) SetInDorm(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if err := h.userService.SetInDorm(userID); err != nil {
+		http.Error(w, "failed to set student in dorm", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "student postavljen u dom"})
+}
+
+// POST /users/{id}/out-dorm – izbaci studenta iz doma
+func (h *UserHandler) SetOutDorm(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if err := h.userService.SetOutDorm(userID); err != nil {
+		http.Error(w, "failed to set student out of dorm", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "student izbačen iz doma"})
+}

@@ -98,3 +98,13 @@ func (h *OpenDormHandler) GetOccupancyPerCityHandler(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(occupancy)
 }
+func (h *OpenDormHandler) GetFacilitiesSummaryHandler(w http.ResponseWriter, r *http.Request) {
+	summary, err := h.service.GetFacilitiesSummary()
+	if err != nil {
+		http.Error(w, "Greška pri dohvaćanju sadržaja", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(summary)
+}

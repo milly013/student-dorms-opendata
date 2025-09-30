@@ -1,0 +1,26 @@
+<!-- open-dorms.component.html -->
+<div *ngIf="loading">Loading dorms...</div>
+<div *ngIf="error">{{ error }}</div>
+
+<table *ngIf="!loading && !error" class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>City</th>
+      <th>Type</th>
+      <th>Capacity</th>
+      <th>Occupied</th>
+      <th>Average Rating</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let dorm of dorms">
+      <td>{{ dorm.name }}</td>
+      <td>{{ dorm.city }}</td>
+      <td>{{ dorm.type }}</td>
+      <td>{{ dorm.capacity }}</td>
+      <td>{{ dorm.occupied }}</td>
+      <td>{{ dorm.average_rating | number:'1.1-2' }}</td>
+    </tr>
+  </tbody>
+</table>

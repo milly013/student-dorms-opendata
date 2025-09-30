@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface Dorm {
@@ -37,4 +37,19 @@ export class DormService {
   getAllDorms(): Observable<Dorm[]> {
     return this.http.get<Dorm[]>(`${this.apiUrl}/dorms`);
   }
+
+  addRating(dormId: string, score: number): Observable<any> {
+    const token = localStorage.getItem('token'); 
+
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`
+    });
+
+    return this.http.post(
+      `${this.apiUrl}/dorms/rating`,
+      { dorm_id: dormId, score: score },
+      { headers }
+    );
+  }
+
 }

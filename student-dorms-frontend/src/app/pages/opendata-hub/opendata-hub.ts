@@ -17,9 +17,9 @@ export class OpenDataHubComponent {
       route: '/opendata/prices'
     },
     {
-      title: 'Distribucija tipova domova',
-      description: 'Pregled tipova domova po regijama.',
-      route: '/opendata/distribution'
+      title: 'Prosjecne ocjene.',
+      description: 'Pregled prosjecnih ocjena domova.',
+      route: '/opendata/avgRating'
     },
     {
       title: 'Trend popunjenosti',
@@ -29,7 +29,7 @@ export class OpenDataHubComponent {
     {
       title: 'Amenitiji po gradu',
       description: 'Lista svih dostupnih amenitija i njihov broj po gradu.',
-      route: '/opendata/amenities-summary'
+      route: '/opendata/facilities'
     },
     {
       title: 'Rang lista gradova po slobodnim mjestima',

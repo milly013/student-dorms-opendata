@@ -12,5 +12,5 @@ type OpenDorm struct {
 	AverageRating float64  `json:"average_rating"`
 	CommentsCount int      `json:"comments_count"`
 	Tags          []string `json:"tags"`
-	Price         float64  `json:"price"` // Dodano polje za cijenu
+	Price         float64  `json:"price"`
 }

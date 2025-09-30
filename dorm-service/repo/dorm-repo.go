@@ -4,6 +4,7 @@ import (
 	"context"
 	"dorm-service/model" // ← ZAMENI prema svom modulu
 	"errors"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -172,4 +173,31 @@ func (r *DormRepository) GetOccupancyStats() ([]map[string]interface{}, error) {
 	}
 
 	return stats, nil
+}
+
+// AddRating dodaje novu ocjenu za dom
+func (r *DormRepository) AddRating(dormID, userID string, score float64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Provjera da li dorm postoji
+	filter := bson.M{"id": dormID}
+	var dorm model.Dorm
+	err := r.collection.FindOne(ctx, filter).Decode(&dorm)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return fmt.Errorf("Dorm not found")
+		}
+		return err
+	}
+
+	// Kreiranje ocjene sa ispravnim bson tagom
+	rating := model.Rating{
+		UserID: userID,
+		Score:  score,
+	}
+
+	update := bson.M{"$push": bson.M{"ratings": rating}}
+	_, err = r.collection.UpdateOne(ctx, filter, update)
+	return err
 }

@@ -18,6 +18,30 @@ export interface CityDorms {
   averagePrice: number;
 }
 
+export interface FacilitiesSummary {
+  [city: string]: {
+    [facility: string]: number;
+  };
+}
+
+// dorm.ts ili open-dorm.ts
+export interface OpenDorm {
+  id: string;
+  name: string;
+  city: string;
+  capacity: number;
+  occupied: number;
+  occupancy_rate: number;
+  type: string;
+  amenities: string[];
+  average_rating: number;
+  comments_count: number;
+  tags: string[];
+  price: number;
+}
+
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -34,6 +58,9 @@ export class Opendata {
   getDorms(): Observable<Dorm[]> {
   return this.http.get<Dorm[]>(`${this.baseUrl}/open-dorms`);
 }
+  getAvgRating(): Observable<OpenDorm[]> {
+  return this.http.get<OpenDorm[]>(`${this.baseUrl}/open-dorms`);
+}
 
  getFreeSpots(): Observable<FreeSpots[]> {
     return this.http.get<{ [city: string]: number }>(`${this.baseUrl}/cities/free-spots`).pipe(
@@ -47,7 +74,9 @@ getOccupancyPerCity(): Observable<Record<string, number>> {
   return this.http.get<Record<string, number>>(`${this.baseUrl}/trends/occupancy`);
 }
 
-
+getFacilitiesSummary(): Observable<FacilitiesSummary> {
+    return this.http.get<FacilitiesSummary>(`${this.baseUrl}/facilities/summary`);
+  }
 
   
 }

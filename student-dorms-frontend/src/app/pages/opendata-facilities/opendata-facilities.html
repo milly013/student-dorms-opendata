@@ -1,0 +1,22 @@
+<div *ngIf="loading">⏳ Učitavanje podataka...</div>
+<div *ngIf="error">{{ error }}</div>
+
+<div *ngIf="!loading && !error">
+  <div *ngFor="let city of (facilitiesSummary | keyvalue)" class="city-table mb-4">
+    <h3>{{ city.key }}</h3>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Amenitet</th>
+          <th>Broj</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let facility of getFacilitiesList(city.key)">
+          <td>{{ facility.name }}</td>
+          <td>{{ facility.count }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

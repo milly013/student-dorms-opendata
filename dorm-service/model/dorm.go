@@ -17,13 +17,12 @@ type Dorm struct {
 	Comments    []Comment `json:"comments,omitempty"`    // Lista komentara
 	Preferences []string  `json:"preferences,omitempty"` // npr. "blizu faksa", "mirno", "dobar net"
 
-	// Dinamičko polje – ne čuva se u bazi, koristi se za statistiku i sortiranje
 	FreeSpots int `bson:"-" json:"free_spots"`
 }
 
 type Rating struct {
-	UserID string  `json:"user_id"`
-	Score  float64 `json:"score"` // od 1.0 do 5.0
+	UserID string  `json:"user_id" bson:"user_id"` // <--- bitno za MongoDB schema
+	Score  float64 `json:"score" bson:"score"`
 }
 
 type Comment struct {

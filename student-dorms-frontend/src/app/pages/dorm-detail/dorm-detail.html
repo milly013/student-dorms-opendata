@@ -1,23 +1,64 @@
 <div *ngIf="dorm" class="container mt-4">
-  <h2>{{ dorm.name }}</h2>
-  <p><strong>Adresa:</strong> {{ dorm.address }}, {{ dorm.city }}</p>
-  <p><strong>Tip:</strong> {{ dorm.type }}</p>
-  <p><strong>Kapacitet:</strong> {{ dorm.capacity }}</p>
-  <p><strong>Zauzeto:</strong> {{ dorm.occupied }}</p>
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title mb-3">{{ dorm.name }}</h2>
+      <p class="card-text">
+        <strong>Adresa:</strong> {{ dorm.address }}, {{ dorm.city }}
+      </p>
+      <p class="card-text"><strong>Tip:</strong> {{ dorm.type }}</p>
+      <p class="card-text"><strong>Kapacitet:</strong> {{ dorm.capacity }}</p>
+      <p class="card-text"><strong>Zauzeto:</strong> {{ dorm.occupied }}</p>
 
-  <h4>Sadržaji</h4>
-  <ul>
-    <li *ngFor="let amenity of dorm.amenities">{{ amenity }}</li>
-  </ul>
+      <h4 class="mt-4">Sadržaji</h4>
+      <ul class="list-group mb-3">
+        <li
+          *ngFor="let amenity of dorm.amenities"
+          class="list-group-item"
+        >
+          {{ amenity }}
+        </li>
+      </ul>
 
-  <h4>Opis</h4>
-  <p>{{ dorm.description }}</p>
+      <h4>Opis</h4>
+      <p>{{ dorm.description }}</p>
 
-  <h4>Komentari</h4>
-  <ul>
-    <li *ngFor="let comment of dorm.comments">
-      <strong>{{ comment.user_id }}:</strong> {{ comment.message }}
-      <small>({{ comment.date }})</small>
-    </li>
-  </ul>
+      <h4 class="mt-4">Komentari</h4>
+      <ul class="list-group mb-3">
+        <li
+          *ngFor="let comment of dorm.comments"
+          class="list-group-item"
+        >
+          <strong>{{ comment.user_id }}:</strong> {{ comment.message }}
+          <br />
+          <small class="text-muted">{{ comment.date }}</small>
+        </li>
+      </ul>
+
+      <h4 class="mt-4">Dodaj ocjenu</h4>
+      <form (ngSubmit)="submitRating()" class="row g-3 align-items-center">
+        <div class="col-auto">
+          <label for="rating" class="col-form-label">Ocjena (1–5):</label>
+        </div>
+        <div class="col-auto">
+          <input
+            type="number"
+            id="rating"
+            class="form-control"
+            [(ngModel)]="newRating"
+            name="rating"
+            min="1"
+            max="5"
+            required
+          />
+        </div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary">Pošalji</button>
+        </div>
+      </form>
+
+      <div *ngIf="message" class="alert alert-info mt-3">
+        {{ message }}
+      </div>
+    </div>
+  </div>
 </div>

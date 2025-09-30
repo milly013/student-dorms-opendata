@@ -72,3 +72,12 @@ func (s *OpenDormService) GetFreeSpotsPerCity() (map[string]int, error) {
 func (s *OpenDormService) GetOccupancyPerCity() (map[string]float64, error) {
 	return s.repo.GetOccupancyPerCity()
 }
+
+func (s *OpenDormService) GetFacilitiesSummary() (map[string]map[string]int, error) {
+	dorms, err := s.repo.FindAll()
+	if err != nil {
+		return nil, err
+	}
+
+	return repo.GetFacilitiesSummary(dorms), nil
+}

@@ -145,3 +145,13 @@ func (s *UserService) IsStudent(ID string) (bool, error) {
 	}
 	return role == "student", nil
 }
+
+// PostaviInDorm postavlja InDorm na true
+func (s *UserService) SetInDorm(userID string) error {
+	return s.repo.UpdateInDorm(userID, true)
+}
+
+// IzbaciIzDoma postavlja InDorm na false
+func (s *UserService) SetOutDorm(userID string) error {
+	return s.repo.UpdateInDorm(userID, false)
+}

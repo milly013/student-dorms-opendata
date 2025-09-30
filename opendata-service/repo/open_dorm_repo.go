@@ -20,10 +20,27 @@ func NewDormRepository(db *mongo.Database) *OpenDormRepository {
 	}
 }
 
-// FindAll vraća sve dormove iz baze
 func (r *OpenDormRepository) FindAll() ([]model.OpenDorm, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	// Privremeni tip koji uključuje Ratings i Comments
+	var rawDorms []struct {
+		ID        string   `bson:"id"`
+		Name      string   `bson:"name"`
+		City      string   `bson:"city"`
+		Capacity  int      `bson:"capacity"`
+		Occupied  int      `bson:"occupied"`
+		Type      string   `bson:"type"`
+		Amenities []string `bson:"amenities"`
+		Price     float64  `bson:"price"`
+		Ratings   []struct {
+			UserID string  `bson:"user_id"`
+			Score  float64 `bson:"score"`
+		} `bson:"ratings,omitempty"`
+		Comments []struct{} `bson:"comments,omitempty"`
+		Tags     []string   `bson:"tags,omitempty"`
+	}
 
 	cursor, err := r.collection.Find(ctx, bson.M{})
 	if err != nil {
@@ -31,9 +48,36 @@ func (r *OpenDormRepository) FindAll() ([]model.OpenDorm, error) {
 	}
 	defer cursor.Close(ctx)
 
-	var dorms []model.OpenDorm
-	if err := cursor.All(ctx, &dorms); err != nil {
+	if err := cursor.All(ctx, &rawDorms); err != nil {
 		return nil, err
+	}
+
+	// Mapiranje u OpenDorm i računanje AverageRating + CommentsCount
+	var dorms []model.OpenDorm
+	for _, d := range rawDorms {
+		var avgRating float64
+		if len(d.Ratings) > 0 {
+			var sum float64
+			for _, r := range d.Ratings {
+				sum += r.Score
+			}
+			avgRating = sum / float64(len(d.Ratings))
+		}
+
+		dorms = append(dorms, model.OpenDorm{
+			ID:            d.ID,
+			Name:          d.Name,
+			City:          d.City,
+			Capacity:      d.Capacity,
+			Occupied:      d.Occupied,
+			OccupancyRate: float64(d.Occupied) / float64(d.Capacity) * 100,
+			Type:          d.Type,
+			Amenities:     d.Amenities,
+			AverageRating: avgRating,
+			CommentsCount: len(d.Comments),
+			Tags:          d.Tags,
+			Price:         d.Price,
+		})
 	}
 
 	return dorms, nil
@@ -187,4 +231,21 @@ func (r *OpenDormRepository) GetOccupancyPerCity() (map[string]float64, error) {
 	}
 
 	return results, nil
+}
+
+// Funkcija vraća mapu: grad -> mapa amenitija i njihovog broja
+func GetFacilitiesSummary(dorms []model.OpenDorm) map[string]map[string]int {
+	result := make(map[string]map[string]int)
+
+	for _, dorm := range dorms {
+		if _, ok := result[dorm.City]; !ok {
+			result[dorm.City] = make(map[string]int)
+		}
+
+		for _, amenity := range dorm.Amenities {
+			result[dorm.City][amenity]++
+		}
+	}
+
+	return result
 }

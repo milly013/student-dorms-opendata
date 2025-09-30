@@ -116,3 +116,15 @@ func (r *UserRepository) DeleteByID(id string) error {
 	_, err = r.collection.DeleteOne(ctx, bson.M{"_id": objID})
 	return err
 }
+func (r *UserRepository) UpdateInDorm(userID string, inDorm bool) error {
+	objID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": objID}
+	update := bson.M{"$set": bson.M{"inDorm": inDorm}}
+
+	_, err = r.collection.UpdateOne(context.Background(), filter, update)
+	return err
+}

@@ -112,3 +112,11 @@ func (s *DormService) CheckAdmin(userID string) (bool, error) {
 	role := data["role"]
 	return role == "admin", nil
 }
+
+func (s *DormService) AddRating(dormID, userID string, score float64) error {
+	// ovdje možeš dodati validacije, npr. da score mora biti 1–5
+	if score < 1 || score > 5 {
+		return fmt.Errorf("ocjena mora biti između 1 i 5")
+	}
+	return s.repo.AddRating(dormID, userID, score)
+}
