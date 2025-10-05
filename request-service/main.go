@@ -45,9 +45,12 @@ func main() {
 
 	// Routes protected by JWT middleware
 	r.Handle("/requests", middleware.JWTAuth(http.HandlerFunc(requestHandler.CreateMoveInRequest))).Methods("POST")
+	r.Handle("/requests/move-out", middleware.JWTAuth(http.HandlerFunc(requestHandler.CreateMoveOutRequest))).Methods("POST")
 	r.Handle("/requests", middleware.JWTAuth(http.HandlerFunc(requestHandler.GetAllRequests))).Methods("GET")
 	r.Handle("/requests/{id}/approve", middleware.JWTAuth(http.HandlerFunc(requestHandler.ApproveRequest))).Methods("POST")
 	r.Handle("/requests/{id}/reject", middleware.JWTAuth(http.HandlerFunc(requestHandler.RejectRequest))).Methods("POST")
+	r.Handle("/requests/popular-dorms", middleware.JWTAuth(http.HandlerFunc(requestHandler.GetPopularDorms))).Methods("GET")
+	r.Handle("/requests/{id}", middleware.JWTAuth(http.HandlerFunc(requestHandler.DeleteRequest))).Methods("DELETE")
 
 	port := "8083"
 	log.Println("Request-service running on port:", port)

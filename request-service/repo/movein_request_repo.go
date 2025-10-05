@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"request-service/model"
 	"time"
 
@@ -48,6 +49,23 @@ func (r *MoveInRequestRepository) GetAll(ctx context.Context) ([]model.MoveInReq
 	return requests, nil
 }
 
+func (r *MoveInRequestRepository) GetByID(ctx context.Context, id string) (*model.MoveInRequest, error) {
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var req model.MoveInRequest
+	err = r.collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&req)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &req, nil
+}
+
 // UpdateStatus mijenja status zahtjeva po ID-u
 func (r *MoveInRequestRepository) UpdateStatus(ctx context.Context, id string, status string) error {
 	// Konvertujemo string ID u Mongo ObjectID
@@ -76,4 +94,23 @@ func (r *MoveInRequestRepository) GetByStudent(ctx context.Context, studentID st
 		return nil, err
 	}
 	return &req, nil
+}
+
+// Delete briše zahtjev po ID-u
+func (r *MoveInRequestRepository) Delete(ctx context.Context, id string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return fmt.Errorf("invalid ObjectID: %w", err)
+	}
+
+	res, err := r.collection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		return err
+	}
+
+	if res.DeletedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
 }

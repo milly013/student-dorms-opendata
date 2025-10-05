@@ -7,6 +7,9 @@ import { OpendataPrices } from './pages/opendata-prices/opendata-prices';
 import { OpendataFreeSpots } from './pages/opendata-free-spots/opendata-free-spots';
 import { OpendataFacilities } from './pages/opendata-facilities/opendata-facilities';
 import { OpendataAvgratingimplements } from './pages/opendata-avgrating/opendata-avgrating';
+import { Requests } from './pages/requests/requests';
+import { PopularDorms } from './pages/popular-dorms/popular-dorms';
+import { MoveOut } from './pages/move-out/move-out';
 
 
 export const routes: Routes = [
@@ -19,5 +22,8 @@ export const routes: Routes = [
   { path: 'opendata/free-spots', component: OpendataFreeSpots},
   { path: 'opendata/facilities', component: OpendataFacilities},
   { path: 'opendata/avgRating', component: OpendataAvgratingimplements},
+  { path: 'opendata/popularDorms', component: PopularDorms},
+  { path: 'requests', component: Requests},
+  { path: 'move-out', component: MoveOut},
 
 ];

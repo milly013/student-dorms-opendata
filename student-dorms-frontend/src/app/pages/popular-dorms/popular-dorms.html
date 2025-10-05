@@ -1,0 +1,25 @@
+<div class="container mt-4">
+  <h2>Popular Dorms</h2>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Name</th>
+        <th>Address</th>
+        <th>Type</th>
+        <th>Capacity</th>
+        <th>Occupied</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let dorm of popularDorms; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ dorm.name }}</td>
+        <td>{{ dorm.address }}, {{ dorm.city }}</td>
+        <td>{{ dorm.type }}</td>
+        <td>{{ dorm.capacity }}</td>
+        <td>{{ dorm.occupied }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

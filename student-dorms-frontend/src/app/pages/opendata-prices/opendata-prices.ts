@@ -47,5 +47,30 @@ export class OpendataPrices implements OnInit{
       }
     });
   }
+  exportToJSON(): void { 
+  const jsonData = JSON.stringify(this.cityDorms, null, 2); 
+  const blob = new Blob([jsonData], { type: 'application/json' }); 
+  const url = window.URL.createObjectURL(blob); 
+  const a = document.createElement('a'); 
+  a.href = url; 
+  a.download = 'city-dorms.json'; 
+  a.click(); 
+  window.URL.revokeObjectURL(url); 
+} 
+  exportToCSV(): void { 
+    let csv = 'City,Dorm,Price,Average Price\n'; 
+    this.cityDorms.forEach(cityData => { 
+    cityData.dorms.forEach(dorm => { 
+    csv += `${cityData.city},${dorm.name},${dorm.price},${cityData.averagePrice}\n`;
+    }); 
+  }); 
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' }); 
+  const url = window.URL.createObjectURL(blob); 
+  const a = document.createElement('a'); 
+  a.href = url; 
+  a.download = 'city-dorms.csv'; 
+  a.click(); 
+  window.URL.revokeObjectURL(url); 
+}
 
 }

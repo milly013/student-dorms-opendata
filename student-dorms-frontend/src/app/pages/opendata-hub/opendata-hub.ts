@@ -22,9 +22,9 @@ export class OpenDataHubComponent {
       route: '/opendata/avgRating'
     },
     {
-      title: 'Trend popunjenosti',
-      description: 'Pratite trend popunjenosti domova kroz vrijeme.',
-      route: '/opendata/trends'
+      title: 'Zainteresovanost',
+      description: 'Rang lista domova sa najvise prijavljenih zahtjeva.',
+      route: '/opendata/popularDorms'
     },
     {
       title: 'Amenitiji po gradu',

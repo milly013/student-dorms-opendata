@@ -1,0 +1,38 @@
+<div class="container mt-4">
+  <h2>All Move-In Requests</h2>
+
+  <div *ngIf="loading">Loading requests...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <table *ngIf="!loading && requests.length > 0" class="table table-striped">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Student ID</th>
+        <th>Dorm ID</th>
+        <th>Status</th>
+        <th>Created At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let req of requests">
+        <td>{{ req.id }}</td>
+        <td>{{ req.student_id }}</td>
+        <td>{{ req.dorm_id }}</td>
+        <td>{{ req.status }}</td>
+        <td>{{ req.created_at | date:'short' }}</td>
+        <td>
+          <ng-container *ngIf="req.status === 'pending'">
+            <button class="btn btn-success btn-sm me-2" (click)="approve(req.id)">Approve</button>
+            <button class="btn btn-danger btn-sm" (click)="reject(req.id)">Reject</button>
+          </ng-container>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && requests.length === 0" class="alert alert-info">
+    No requests found.
+  </div>
+</div>

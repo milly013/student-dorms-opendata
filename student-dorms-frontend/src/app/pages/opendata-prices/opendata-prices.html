@@ -1,6 +1,12 @@
 <div *ngIf="loading">Učitavanje podataka...</div>
 <div *ngIf="error">{{ error }}</div>
 
+
+<div class="mb-3">
+  <button (click)="exportToJSON()" class="btn btn-primary me-2">📥 Export JSON</button>
+  <button (click)="exportToCSV()" class="btn btn-secondary">📥 Export CSV</button>
+</div>
+
 <div *ngFor="let cityData of cityDorms" class="city-table mb-4">
   <h3>{{ cityData.city }}</h3>
   <table class="table table-striped">

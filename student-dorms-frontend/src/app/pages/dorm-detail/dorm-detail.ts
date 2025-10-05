@@ -3,6 +3,8 @@ import { ActivatedRoute } from '@angular/router';
 import { Dorm , DormService  } from '../../services/dorm';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RequestService } from '../../services/request.service';
+import { AuthService } from '../../services/auth';
 
 
 @Component({
@@ -15,10 +17,16 @@ export class DormDetailComponent implements OnInit {
   dorm?: Dorm;
   newRating: number = 0;
   message: string | null = null;
+    roomType: string = 'single';
+  requestMessage: string | null = null;
+  moveOutMessage: string | null = null;
 
   constructor(
     private route: ActivatedRoute,
-    private dormsService: DormService
+    private dormsService: DormService,
+    private requestService: RequestService,
+    public authService: AuthService
+    
   ) {}
 
   ngOnInit(): void {
@@ -44,7 +52,7 @@ export class DormDetailComponent implements OnInit {
       next: () => {
         this.message = '✅ Ocjena je uspješno dodata!';
         this.newRating = 0;
-        this.loadDorm(this.dorm!.id); // ponovo učitaj dom da se vidi nova prosječna ocjena
+        this.loadDorm(this.dorm!.id); 
       },
       error: (err) => {
         console.error(err);
@@ -54,4 +62,66 @@ export class DormDetailComponent implements OnInit {
       }
     });
   }
+  submitRequest(): void {
+    if (!this.dorm) {
+      this.requestMessage = 'Greška: dom nije učitan.';
+      return;
+    }
+
+    const studentId = this.authService.getUserId();
+    if (!studentId) {
+      this.requestMessage = 'Molimo se prijavite prije slanja zahtjeva.';
+      return;
+    }
+    const data = {
+      student_id: studentId,
+      dorm_id: this.dorm.id,
+      room_type: this.roomType
+    };
+
+    this.requestService.createRequest(data).subscribe({
+      next: (res) => {
+        this.requestMessage = '✅ Zahtjev za useljenje je uspješno poslan!';
+        this.roomType = 'single'; // reset forme
+      },
+      error: (err) => {
+        console.error(err);
+        this.requestMessage = err.status === 401
+          ? '❌ Niste autorizovani. Prijavite se ponovo.'
+          : '❌ Greška pri slanju zahtjeva.';
+      }
+    });
+  }
+  submitMoveOut(): void {
+  if (!this.dorm) {
+    this.moveOutMessage = 'Greška: dom nije učitan.';
+    return;
+  }
+
+  const studentId = this.authService.getUserId();
+  if (!studentId) {
+    this.moveOutMessage = 'Molimo se prijavite prije slanja zahtjeva.';
+    return;
+  }
+
+  const data = {
+    student_id: studentId,
+    dorm_id: this.dorm.id,
+    room_type: '' ,
+    requestType: 'move_in'
+  };
+
+  this.requestService.createMoveOutRequest(data).subscribe({
+    next: (res) => {
+      this.moveOutMessage = '✅ Zahtjev za iseljenje je uspješno poslan!';
+    },
+    error: (err) => {
+      console.error(err);
+      this.moveOutMessage = err.status === 401
+        ? '❌ Niste autorizovani. Prijavite se ponovo.'
+        : '❌ Greška pri slanju zahtjeva.';
+    }
+  });
+}
+
 }

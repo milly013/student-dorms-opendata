@@ -62,3 +62,30 @@
     </div>
   </div>
 </div>
+<h4 class="mt-4">Zatraži useljenje</h4>
+<form (ngSubmit)="submitRequest()" #moveInForm="ngForm">
+  <div class="mb-3">
+    <label for="roomType" class="form-label">Tip sobe</label>
+    <select id="roomType" class="form-select" [(ngModel)]="roomType" name="roomType" required>
+      <option value="single">Single</option>
+      <option value="double">Double</option>
+      <option value="triple">Triple</option>
+    </select>
+  </div>
+  <button type="submit" class="btn btn-primary">Pošalji zahtjev</button>
+</form>
+
+<div *ngIf="requestMessage" class="alert alert-info mt-3">
+  {{ requestMessage }}
+</div>
+
+<div *ngIf="authService.isInDorm()" class="mt-4">
+  <h4>Zatraži iseljenje</h4>
+  <button class="btn btn-danger" (click)="submitMoveOut()">
+    Pošalji zahtjev za iseljenje
+  </button>
+
+  <div *ngIf="moveOutMessage" class="alert alert-info mt-3">
+    {{ moveOutMessage }}
+  </div>
+</div>
