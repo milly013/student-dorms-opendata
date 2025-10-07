@@ -159,3 +159,49 @@ func (h *UserHandler) SetOutDorm(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "student izbačen iz doma"})
 }
+
+// POST /users/{id}/assign-dorm – dodaj korisnika u dom
+func (h *UserHandler) AssignDorm(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	var req struct {
+		DormID string `json:"dorm_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.DormID == "" {
+		http.Error(w, "dorm_id is required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.userService.AssignDorm(userID, req.DormID); err != nil {
+		http.Error(w, "failed to assign dorm", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "student uspešno dodeljen domu",
+		"userId":  userID,
+		"dormId":  req.DormID,
+	})
+}
+
+// POST /users/{id}/remove-dorm – izbaci korisnika iz doma
+func (h *UserHandler) RemoveDorm(w http.ResponseWriter, r *http.Request) {
+	userID := mux.Vars(r)["id"]
+
+	if err := h.userService.RemoveDorm(userID); err != nil {
+		http.Error(w, "failed to remove dorm", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "student uspešno iseljen iz doma",
+		"userId":  userID,
+	})
+}

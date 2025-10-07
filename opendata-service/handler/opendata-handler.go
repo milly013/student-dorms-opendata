@@ -31,7 +31,7 @@ func (h *OpenDormHandler) GetAllOpenDormsHandler(w http.ResponseWriter, r *http.
 
 // GET /open-dorms/{id}
 func (h *OpenDormHandler) GetDormHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r) // uzimamo path parametre
+	vars := mux.Vars(r)
 	id := vars["id"]
 
 	dorm, err := h.service.GetDormByID(id)

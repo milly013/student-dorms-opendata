@@ -44,4 +44,43 @@ export class PopularDorms implements OnInit, AfterViewInit  {
       error: (err) => console.error('Failed to load popular dorms', err)
     });
   }
+  exportToJSON() {
+    const jsonData = JSON.stringify(this.popularDorms, null, 2);
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'popular-dorms.json';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  // 📌 Export u CSV
+  exportToCSV() {
+    if (!this.popularDorms.length) return;
+
+    const headers = ['Rank', 'Name', 'Address', 'City', 'Type', 'Capacity', 'Occupied'];
+    const rows = this.popularDorms.map((dorm, i) => [
+      i + 1,
+      dorm.name,
+      dorm.address,
+      dorm.city,
+      dorm.type,
+      dorm.capacity,
+      dorm.occupied
+    ]);
+
+    const csvContent =
+      [headers, ...rows]
+        .map(row => row.map(item => `"${item}"`).join(','))
+        .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'popular-dorms.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
 }

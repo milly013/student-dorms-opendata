@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -93,59 +94,78 @@ func (h *MoveInHandler) ApproveRequest(w http.ResponseWriter, r *http.Request) {
 
 	req, err := h.service.GetRequestByID(ctx, id)
 	if err != nil || req == nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{"error": "request not found"})
+		http.Error(w, "request not found", http.StatusNotFound)
 		return
 	}
 
 	if req.StudentID == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid request, missing studentID"})
+		http.Error(w, "invalid request, missing studentID", http.StatusBadRequest)
 		return
 	}
 
-	// prvo update status u request-service
 	if err := h.service.ApproveRequest(ctx, id); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to approve request"})
+		http.Error(w, "failed to approve request", http.StatusInternalServerError)
 		return
 	}
 
-	// odredi URL za auth-service na osnovu tipa zahtjeva
-	var authServiceURL string
-	switch req.RequestType {
-	case "move_in":
-		authServiceURL = fmt.Sprintf("http://api-gateway:8000/auth/users/%s/in-dorm", req.StudentID)
-	case "move_out":
-		authServiceURL = fmt.Sprintf("http://api-gateway:8000/auth/users/%s/out-dorm", req.StudentID)
-	default:
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "unknown request type"})
-		return
-	}
-
-	// proslijedi token auth-service-u
 	token := r.Header.Get("Authorization")
 	if token == "" {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "missing token"})
+		http.Error(w, "missing token", http.StatusUnauthorized)
 		return
 	}
 	if !strings.HasPrefix(token, "Bearer ") {
 		token = "Bearer " + token
 	}
 
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", authServiceURL, nil)
-	httpReq.Header.Set("Authorization", token)
-
 	client := &http.Client{}
-	resp, err := client.Do(httpReq)
-	if err != nil || resp.StatusCode != http.StatusOK {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "failed to update user dorm status"})
+
+	var authURL, dormURL string
+	switch req.RequestType {
+	case "move_in":
+		authURL = fmt.Sprintf("http://api-gateway:8000/auth/users/%s/assign-dorm", req.StudentID)
+		dormURL = fmt.Sprintf("http://api-gateway:8000/dorms/dorms/%s/add-user", req.DormID)
+	case "move_out":
+		authURL = fmt.Sprintf("http://api-gateway:8000/auth/users/%s/remove-dorm", req.StudentID)
+		dormURL = fmt.Sprintf("http://api-gateway:8000/dorms/dorms/%s/remove-user", req.DormID)
+	default:
+		http.Error(w, "unknown request type", http.StatusBadRequest)
 		return
 	}
-	defer resp.Body.Close()
+
+	bodyData := map[string]string{"dorm_id": req.DormID}
+	bodyJSON, _ := json.Marshal(bodyData)
+
+	authReq, _ := http.NewRequestWithContext(ctx, "POST", authURL, bytes.NewBuffer(bodyJSON))
+	authReq.Header.Set("Authorization", token)
+	authReq.Header.Set("Content-Type", "application/json")
+	authResp, err := client.Do(authReq)
+	if err != nil || authResp.StatusCode != http.StatusOK {
+		http.Error(w, "failed to update auth user status", http.StatusInternalServerError)
+		return
+	}
+	defer authResp.Body.Close()
+
+	dormBody := map[string]string{"user_id": req.StudentID}
+	dormBodyJSON, _ := json.Marshal(dormBody)
+
+	dormReq, _ := http.NewRequestWithContext(ctx, "POST", dormURL, bytes.NewBuffer(dormBodyJSON))
+	dormReq.Header.Set("Authorization", token)
+	dormReq.Header.Set("Content-Type", "application/json")
+	dormResp, err := client.Do(dormReq)
+	fmt.Println("📡 Sending request to dorm-service:", dormURL)
+	fmt.Println("📦 Body:", string(dormBodyJSON))
+	fmt.Println("🔐 Token:", token)
+	if err != nil {
+		fmt.Println("❌ Error sending dorm request:", err)
+	} else {
+		fmt.Println("🌐 dormResp.StatusCode =", dormResp.StatusCode)
+	}
+	if err != nil || dormResp.StatusCode != http.StatusOK {
+		http.Error(w, "failed to update dorm user list", http.StatusInternalServerError)
+		return
+	}
+	defer dormResp.Body.Close()
+	fmt.Println("📦 Sending dormBody:", string(dormBodyJSON))
 
 	message := "Request approved and user status updated"
 	if req.RequestType == "move_out" {

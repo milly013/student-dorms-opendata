@@ -155,3 +155,13 @@ func (s *UserService) SetInDorm(userID string) error {
 func (s *UserService) SetOutDorm(userID string) error {
 	return s.repo.UpdateInDorm(userID, false)
 }
+
+// AssignDorm dodeljuje korisniku određeni dorm
+func (s *UserService) AssignDorm(userID, dormID string) error {
+	return s.repo.AssignDorm(userID, dormID)
+}
+
+// RemoveDorm uklanja korisnika iz doma
+func (s *UserService) RemoveDorm(userID string) error {
+	return s.repo.RemoveDorm(userID)
+}

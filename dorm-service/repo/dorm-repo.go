@@ -201,3 +201,47 @@ func (r *DormRepository) AddRating(dormID, userID string, score float64) error {
 	_, err = r.collection.UpdateOne(ctx, filter, update)
 	return err
 }
+
+// AddUserToDorm dodaje korisnika u listu korisnika doma
+func (r *DormRepository) AddUserToDorm(dormID, userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"id": dormID}
+
+	update := bson.M{
+		"$addToSet": bson.M{"users": userID}, // koristi $addToSet da spreči duplikate
+		"$inc":      bson.M{"occupied": 1},   // automatski povećava broj zauzetih mesta
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("dorm not found")
+	}
+	return nil
+}
+
+// RemoveUserFromDorm uklanja korisnika iz liste korisnika doma
+func (r *DormRepository) RemoveUserFromDorm(dormID, userID string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": dormID}
+
+	update := bson.M{
+		"$pull": bson.M{"users": userID}, // uklanja korisnika
+		"$inc":  bson.M{"occupied": -1},  // smanjuje broj zauzetih mesta
+	}
+
+	result, err := r.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return errors.New("dorm not found")
+	}
+	return nil
+}

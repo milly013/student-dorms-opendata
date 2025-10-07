@@ -13,15 +13,16 @@ type Dorm struct {
 	Description string   `json:"description,omitempty"`
 
 	// Korisnički aspekti
-	Ratings     []Rating  `json:"ratings,omitempty"`     // Lista ocena
-	Comments    []Comment `json:"comments,omitempty"`    // Lista komentara
-	Preferences []string  `json:"preferences,omitempty"` // npr. "blizu faksa", "mirno", "dobar net"
+	Ratings     []Rating  `json:"ratings,omitempty"`
+	Comments    []Comment `json:"comments,omitempty"`
+	Preferences []string  `json:"preferences,omitempty"`
+	Users       []string  `json:"users,omitempty" bson:"users,omitempty"`
 
 	FreeSpots int `bson:"-" json:"free_spots"`
 }
 
 type Rating struct {
-	UserID string  `json:"user_id" bson:"user_id"` // <--- bitno za MongoDB schema
+	UserID string  `json:"user_id" bson:"user_id"`
 	Score  float64 `json:"score" bson:"score"`
 }
 

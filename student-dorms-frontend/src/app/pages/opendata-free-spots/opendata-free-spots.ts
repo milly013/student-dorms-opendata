@@ -89,4 +89,31 @@ export class OpendataFreeSpots implements OnInit {
       ]
     };
   }
+  exportJSON(): void {
+    const dataStr = JSON.stringify(this.cityDorms, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'free_spots.json';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  exportCSV(): void {
+    let csv = 'City,Dorm,FreeSpots,TotalFreeSpots\n';
+    this.cityDorms.forEach(city => {
+      city.dorms.forEach(dorm => {
+        csv += `${city.city},${dorm.name},${dorm.freeSpots},${city.totalFreeSpots}\n`;
+      });
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'free_spots.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
 }

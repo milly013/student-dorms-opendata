@@ -65,8 +65,6 @@ func (s *DormService) GetOccupancyStats() ([]map[string]interface{}, error) {
 	return s.repo.GetOccupancyStats()
 }
 
-// GetDormsSortedByFreeSpots vraća sve domove sortirane po broju slobodnih mesta
-// order = "asc" za rastuće, "desc" za opadajuće
 func (s *DormService) GetDormsSortedByFreeSpots(order string) ([]model.Dorm, error) {
 	dorms, err := s.repo.FindAll()
 	if err != nil {
@@ -114,9 +112,24 @@ func (s *DormService) CheckAdmin(userID string) (bool, error) {
 }
 
 func (s *DormService) AddRating(dormID, userID string, score float64) error {
-	// ovdje možeš dodati validacije, npr. da score mora biti 1–5
 	if score < 1 || score > 5 {
 		return fmt.Errorf("ocjena mora biti između 1 i 5")
 	}
 	return s.repo.AddRating(dormID, userID, score)
+}
+
+// AddUserToDorm dodaje korisnika u dom
+func (s *DormService) AddUserToDorm(dormID, userID string) error {
+	if dormID == "" || userID == "" {
+		return errors.New("dormID and userID are required")
+	}
+	return s.repo.AddUserToDorm(dormID, userID)
+}
+
+// RemoveUserFromDorm uklanja korisnika iz doma
+func (s *DormService) RemoveUserFromDorm(dormID, userID string) error {
+	if dormID == "" || userID == "" {
+		return errors.New("dormID and userID are required")
+	}
+	return s.repo.RemoveUserFromDorm(dormID, userID)
 }

@@ -248,3 +248,75 @@ func (h *DormHandler) AddRatingHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Rating added successfully"})
 }
+
+// POST /dorms/{id}/add-user
+func (h *DormHandler) AddUserToDormHandler(w http.ResponseWriter, r *http.Request) {
+	dormID := mux.Vars(r)["id"]
+
+	if dormID == "" {
+		http.Error(w, "Dorm ID is required", http.StatusBadRequest)
+		return
+	}
+
+	// Pokusaj da izvučeš userID iz tokena (ako ga ima)
+	userIDRaw := r.Context().Value("userID")
+	userID, _ := userIDRaw.(string)
+
+	fmt.Println("📩 AddUserToDormHandler called")
+	fmt.Println("DormID:", dormID)
+
+	if userID == "" {
+		var body struct {
+			UserID string `json:"user_id"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
+		}
+		if body.UserID == "" {
+			http.Error(w, "User ID is required", http.StatusBadRequest)
+			return
+		}
+		userID = body.UserID
+	}
+	fmt.Println("✅ Final values -> DormID:", dormID, "UserID:", userID)
+
+	// Sad imamo i dormID i userID
+	err := h.dormService.AddUserToDorm(dormID, userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to add user to dorm: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": fmt.Sprintf("User %s added to dorm %s", userID, dormID),
+	})
+}
+
+// POST /dorms/{id}/remove-user
+func (h *DormHandler) RemoveUserFromDormHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	dormID := vars["id"]
+
+	userIDRaw := r.Context().Value("userID")
+	userID, ok := userIDRaw.(string)
+	if !ok || userID == "" {
+		http.Error(w, "Unauthorized: userID missing", http.StatusUnauthorized)
+		return
+	}
+
+	if dormID == "" {
+		http.Error(w, "Dorm ID is required", http.StatusBadRequest)
+		return
+	}
+
+	err := h.dormService.RemoveUserFromDorm(dormID, userID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to remove user from dorm: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": fmt.Sprintf("User %s removed from dorm %s", userID, dormID),
+	})
+}

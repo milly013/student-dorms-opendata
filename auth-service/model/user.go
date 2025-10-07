@@ -8,5 +8,6 @@ type User struct {
 	Email    string             `json:"email"`
 	Password string             `json:"password"`
 	Role     string             `json:"role"` // "admin" ili "student"
+	DormID   string             `json:"dorm_id,omitempty" bson:"dorm_id,omitempty"`
 	InDorm   bool               `json:"inDorm"`
 }

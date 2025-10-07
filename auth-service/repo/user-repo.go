@@ -128,3 +128,41 @@ func (r *UserRepository) UpdateInDorm(userID string, inDorm bool) error {
 	_, err = r.collection.UpdateOne(context.Background(), filter, update)
 	return err
 }
+
+// AssignDorm postavlja korisnika u određeni dom (DormID + InDorm = true)
+func (r *UserRepository) AssignDorm(userID string, dormID string) error {
+	objID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": objID}
+	update := bson.M{
+		"$set": bson.M{
+			"inDorm":  true,
+			"dorm_id": dormID,
+		},
+	}
+
+	_, err = r.collection.UpdateOne(context.Background(), filter, update)
+	return err
+}
+
+// RemoveDorm uklanja korisnika iz doma (DormID prazno + InDorm = false)
+func (r *UserRepository) RemoveDorm(userID string) error {
+	objID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"_id": objID}
+	update := bson.M{
+		"$set": bson.M{
+			"inDorm":  false,
+			"dorm_id": "",
+		},
+	}
+
+	_, err = r.collection.UpdateOne(context.Background(), filter, update)
+	return err
+}

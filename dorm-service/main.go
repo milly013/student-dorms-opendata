@@ -85,6 +85,8 @@ func main() {
 	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.UpdateDormHandler))).Methods("PUT")
 	r.Handle("/dorms/{id}", middleware.JWTAuth(http.HandlerFunc(dormHandler.DeleteDormHandler))).Methods("DELETE")
 	r.Handle("/dorms/rating", middleware.JWTAuth(http.HandlerFunc(dormHandler.AddRatingHandler))).Methods("POST")
+	r.Handle("/dorms/{id}/add-user", middleware.JWTAuth(http.HandlerFunc(dormHandler.AddUserToDormHandler))).Methods("POST")
+	r.Handle("/dorms/{id}/remove-user", middleware.JWTAuth(http.HandlerFunc(dormHandler.RemoveUserFromDormHandler))).Methods("POST")
 
 	// c := cors.New(cors.Options{
 	// 	AllowedOrigins:   []string{"http://localhost:4200"},

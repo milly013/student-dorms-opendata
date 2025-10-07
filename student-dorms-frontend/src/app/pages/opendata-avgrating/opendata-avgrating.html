@@ -24,3 +24,10 @@
     </tr>
   </tbody>
 </table>
+<div *ngIf="!loading && !error" class="mb-3 d-flex justify-content-end">
+  <button (click)="exportToJSON()" class="btn btn-primary me-2">📥 Export JSON</button>
+  <button (click)="exportToCSV()" class="btn btn-secondary">📥 Export CSV</button>
+</div>
+<a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank">
+  <img src="https://licensebuttons.net/p/zero/1.0/88x31.png" alt="CC0" />
+</a>
