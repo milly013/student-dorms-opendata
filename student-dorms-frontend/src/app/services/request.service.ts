@@ -9,6 +9,10 @@ export interface MoveInRequest {
   status: string;
   room_type: string;
   created_at: string;
+
+  // dodatna polja za prikaz
+  studentName?: string;
+  dormName?: string;
 }
 export interface PopularDorm {
   dorm_id: string;

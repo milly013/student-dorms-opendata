@@ -1,3 +1,4 @@
+
 <div class="container mt-4">
   <h2>All Move-In Requests</h2>
 
@@ -7,19 +8,19 @@
   <table *ngIf="!loading && requests.length > 0" class="table table-striped">
     <thead>
       <tr>
-        <th>ID</th>
-        <th>Student ID</th>
-        <th>Dorm ID</th>
+        <th>#</th>
+        <th>Student</th>
+        <th>Dorm</th>
         <th>Status</th>
         <th>Created At</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let req of requests">
-        <td>{{ req.id }}</td>
-        <td>{{ req.student_id }}</td>
-        <td>{{ req.dorm_id }}</td>
+      <tr *ngFor="let req of requests; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ req.studentName || 'Loading...' }}</td>
+        <td>{{ req.dormName || 'Loading...' }}</td>
         <td>{{ req.status }}</td>
         <td>{{ req.created_at | date:'short' }}</td>
         <td>
@@ -36,3 +37,4 @@
     No requests found.
   </div>
 </div>
+

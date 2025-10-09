@@ -1,0 +1,64 @@
+<div class="container mt-4">
+  <h2>Kreiraj novi dom</h2>
+
+  <form (ngSubmit)="submitDorm()">
+    <div class="mb-3">
+      <label class="form-label">Naziv doma</label>
+      <input type="text" class="form-control" [(ngModel)]="dorm.name" name="name" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Adresa</label>
+      <input type="text" class="form-control" [(ngModel)]="dorm.address" name="address" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Grad</label>
+      <input type="text" class="form-control" [(ngModel)]="dorm.city" name="city" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Cena</label>
+      <input type="number" class="form-control" [(ngModel)]="dorm.price" name="price" min="0">
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Kapacitet</label>
+      <input type="number" class="form-control" [(ngModel)]="dorm.capacity" name="capacity" min="1" required>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Tip doma</label>
+      <select class="form-select" [(ngModel)]="dorm.type" name="type">
+        <option value="muški">Muški</option>
+        <option value="ženski">Ženski</option>
+        <option value="mešoviti">Mešoviti</option>
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Sadržaji</label>
+      <div class="d-flex mb-2">
+        <input type="text" class="form-control me-2" [(ngModel)]="newAmenity" name="newAmenity">
+        <button type="button" class="btn btn-secondary" (click)="addAmenity()">Dodaj</button>
+      </div>
+      <ul class="list-group mb-3">
+        <li class="list-group-item" *ngFor="let amenity of dorm.amenities; let i = index">
+          {{ amenity }}
+          <button type="button" class="btn btn-sm btn-danger float-end" (click)="removeAmenity(i)">X</button>
+        </li>
+      </ul>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Opis</label>
+      <textarea class="form-control" [(ngModel)]="dorm.description" name="description"></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Kreiraj dom</button>
+  </form>
+
+  <div *ngIf="message" class="alert alert-info mt-3">
+    {{ message }}
+  </div>
+</div>

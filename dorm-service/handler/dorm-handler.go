@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -258,38 +259,41 @@ func (h *DormHandler) AddUserToDormHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Pokusaj da izvučeš userID iz tokena (ako ga ima)
-	userIDRaw := r.Context().Value("userID")
-	userID, _ := userIDRaw.(string)
-
 	fmt.Println("📩 AddUserToDormHandler called")
 	fmt.Println("DormID:", dormID)
 
-	if userID == "" {
-		var body struct {
-			UserID string `json:"user_id"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-			http.Error(w, "Invalid request body", http.StatusBadRequest)
-			return
-		}
-		if body.UserID == "" {
-			http.Error(w, "User ID is required", http.StatusBadRequest)
-			return
-		}
-		userID = body.UserID
+	// Uvijek prvo pokušaj pročitati user_id iz tijela zahtjeva
+	var body struct {
+		UserID string `json:"user_id"`
 	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		fmt.Println("❌ Error decoding body:", err)
+		return
+	}
+	userID := strings.TrimSpace(body.UserID)
+
+	if userID == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		return
+	}
+	if userID == "" {
+		http.Error(w, "User ID is required", http.StatusBadRequest)
+		fmt.Println("❌ Missing user ID in both body and token")
+		return
+	}
+
 	fmt.Println("✅ Final values -> DormID:", dormID, "UserID:", userID)
 
 	// Sad imamo i dormID i userID
-	err := h.dormService.AddUserToDorm(dormID, userID)
+	err := h.dormService.AddUserToDorm(dormID, body.UserID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to add user to dorm: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	json.NewEncoder(w).Encode(map[string]string{
-		"message": fmt.Sprintf("User %s added to dorm %s", userID, dormID),
+		"message": fmt.Sprintf("User %s added to dorm %s", body.UserID, dormID),
 	})
 }
 

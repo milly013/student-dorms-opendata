@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AuthService } from './auth';
 
 export interface Dorm {
   id: string;
@@ -24,7 +25,16 @@ export interface Dorm {
 export class DormService {
   private apiUrl = 'http://localhost:8000/dorms'; 
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private authService: AuthService) {
+    
+  }
+
+  createDorm(dorm: Dorm): Observable<any> {
+    const token = this.authService.getToken(); // ili localStorage.getItem('token')
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+
+    return this.http.post(`${this.apiUrl}/dorms`, dorm, { headers });
+  }
 
   getDorms(): Observable<Dorm[]> {
     return this.http.get<Dorm[]>(this.apiUrl);

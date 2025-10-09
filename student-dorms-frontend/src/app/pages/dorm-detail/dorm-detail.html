@@ -11,10 +11,7 @@
 
       <h4 class="mt-4">Sadržaji</h4>
       <ul class="list-group mb-3">
-        <li
-          *ngFor="let amenity of dorm.amenities"
-          class="list-group-item"
-        >
+        <li *ngFor="let amenity of dorm.amenities" class="list-group-item">
           {{ amenity }}
         </li>
       </ul>
@@ -24,37 +21,29 @@
 
       <h4 class="mt-4">Komentari</h4>
       <ul class="list-group mb-3">
-        <li
-          *ngFor="let comment of dorm.comments"
-          class="list-group-item"
-        >
+        <li *ngFor="let comment of dorm.comments" class="list-group-item">
           <strong>{{ comment.user_id }}:</strong> {{ comment.message }}
           <br />
           <small class="text-muted">{{ comment.date }}</small>
         </li>
       </ul>
-
-      <h4 class="mt-4">Dodaj ocjenu</h4>
-      <form (ngSubmit)="submitRating()" class="row g-3 align-items-center">
-        <div class="col-auto">
-          <label for="rating" class="col-form-label">Ocjena (1–5):</label>
+      <div *ngIf="dorm as currentDorm">
+        <div *ngIf="userBelongsToDormMap[currentDorm.id]" class="mt-4">
+          <h4 class="mt-4">Dodaj ocjenu</h4>
+          <form (ngSubmit)="submitRating()" class="row g-3 align-items-center">
+            <div class="col-auto">
+              <label for="rating" class="col-form-label">Ocjena (1–5):</label>
+            </div>
+            <div class="col-auto">
+              <input type="number" id="rating" class="form-control" [(ngModel)]="newRating" name="rating" min="1"
+                max="5" required />
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-primary">Pošalji</button>
+            </div>
+          </form>
         </div>
-        <div class="col-auto">
-          <input
-            type="number"
-            id="rating"
-            class="form-control"
-            [(ngModel)]="newRating"
-            name="rating"
-            min="1"
-            max="5"
-            required
-          />
-        </div>
-        <div class="col-auto">
-          <button type="submit" class="btn btn-primary">Pošalji</button>
-        </div>
-      </form>
+      </div>
 
       <div *ngIf="message" class="alert alert-info mt-3">
         {{ message }}
@@ -62,30 +51,34 @@
     </div>
   </div>
 </div>
-<h4 class="mt-4">Zatraži useljenje</h4>
-<form (ngSubmit)="submitRequest()" #moveInForm="ngForm">
-  <div class="mb-3">
-    <label for="roomType" class="form-label">Tip sobe</label>
-    <select id="roomType" class="form-select" [(ngModel)]="roomType" name="roomType" required>
-      <option value="single">Single</option>
-      <option value="double">Double</option>
-      <option value="triple">Triple</option>
-    </select>
+<div *ngIf="dorm as currentDorm">
+  <div *ngIf="!userBelongsToDormMap[currentDorm.id] && !authService.isAdmin()" class="mt-4">
+    <h4 class="mt-4">Zatraži useljenje</h4>
+    <form (ngSubmit)="submitRequest()" #moveInForm="ngForm">
+      <div class="mb-3">
+        <label for="roomType" class="form-label">Tip sobe</label>
+        <select id="roomType" class="form-select" [(ngModel)]="roomType" name="roomType" required>
+          <option value="single">Single</option>
+          <option value="double">Double</option>
+          <option value="triple">Triple</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary">Pošalji zahtjev</button>
+    </form>
   </div>
-  <button type="submit" class="btn btn-primary">Pošalji zahtjev</button>
-</form>
-
+</div>
 <div *ngIf="requestMessage" class="alert alert-info mt-3">
   {{ requestMessage }}
 </div>
+<div *ngIf="dorm as currentDorm">
+  <div *ngIf="userBelongsToDormMap[currentDorm.id]" class="mt-4">
+    <h4>Zatraži iseljenje</h4>
+    <button class="btn btn-danger" (click)="submitMoveOut()">
+      Pošalji zahtjev za iseljenje
+    </button>
 
-<div *ngIf="authService.isInDorm()" class="mt-4">
-  <h4>Zatraži iseljenje</h4>
-  <button class="btn btn-danger" (click)="submitMoveOut()">
-    Pošalji zahtjev za iseljenje
-  </button>
-
-  <div *ngIf="moveOutMessage" class="alert alert-info mt-3">
-    {{ moveOutMessage }}
+    <div *ngIf="moveOutMessage" class="alert alert-info mt-3">
+      {{ moveOutMessage }}
+    </div>
   </div>
 </div>

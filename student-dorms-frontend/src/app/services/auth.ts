@@ -5,7 +5,7 @@ import { map, tap } from 'rxjs/operators';
 
 interface LoginResponse {
   token: string;
-  
+
 }
 
 @Injectable({
@@ -14,13 +14,13 @@ interface LoginResponse {
 export class AuthService {
   private apiUrl = 'http://localhost:8000/auth';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   login(email: string, password: string): Observable<LoginResponse> {
-    
+
     return this.http.post<LoginResponse>(`${this.apiUrl}/login`, { email, password })
       .pipe(
-        tap((res: LoginResponse) => {   
+        tap((res: LoginResponse) => {
           localStorage.setItem('token', res.token);
         })
       );
@@ -35,7 +35,7 @@ export class AuthService {
 
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.user_id || null;  
+      return payload.user_id || null;
     } catch (e) {
       console.error('Nevalidan token', e);
       return null;
@@ -45,7 +45,7 @@ export class AuthService {
   getToken(): string | null {
     return localStorage.getItem('token');
   }
-   isLoggedIn(): boolean {
+  isLoggedIn(): boolean {
     return !!localStorage.getItem('token');
   }
   getUserRole(): string | null {
@@ -59,24 +59,43 @@ export class AuthService {
       return null;
     }
   }
-   isAdmin(): boolean {
+  isAdmin(): boolean {
     return this.getUserRole() === 'admin';
   }
   getUserInfo(userId: string): Observable<any> {
-  return this.http.get<any>(`${this.apiUrl}/users/${userId}`);
-}
+    const token = this.getToken();
+    return this.http.get<any>(`${this.apiUrl}/users/${userId}`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : ''
+      }
+    });
+  }
 
-isInDorm(): Observable<boolean> {
-  const userId = this.getUserId();
-  if (!userId) return new Observable<boolean>((observer) => {
-    observer.next(false);
-    observer.complete();
-  });
+  isInDorm(): Observable<boolean> {
+    const userId = this.getUserId();
+    if (!userId) return new Observable<boolean>((observer) => {
+      observer.next(false);
+      observer.complete();
+    });
 
-  return this.getUserInfo(userId).pipe(
-    tap(user => console.log("User info:", user)),
-    // vraćamo samo true/false
-    map(user => !!user.inDorm)
-  );
-}
+    return this.getUserInfo(userId).pipe(
+      tap(user => console.log("User info:", user)),
+      // vraćamo samo true/false
+      map(user => !!user.inDorm)
+    );
+  }
+  belongsToDorm(dormId: string): Observable<boolean> {
+    const userId = this.getUserId();
+    console.log(userId)
+    if (!userId) return new Observable<boolean>((observer) => {
+      observer.next(false);
+      observer.complete();
+    });
+
+    return this.getUserInfo(userId).pipe(
+      map(user => user.dormId === dormId),
+      tap(result => console.log(`User ${userId} belongs to dorm ${dormId}:`, result))
+    );
+  }
+
 }

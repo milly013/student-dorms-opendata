@@ -213,35 +213,49 @@ func (r *DormRepository) AddUserToDorm(dormID, userID string) error {
 		"$addToSet": bson.M{"users": userID}, // koristi $addToSet da spreči duplikate
 		"$inc":      bson.M{"occupied": 1},   // automatski povećava broj zauzetih mesta
 	}
+	fmt.Println("📄 AddUserToDorm filter:", filter)
+	fmt.Println("📄 AddUserToDorm update:", update)
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
+		fmt.Println("❌ Mongo UpdateOne error:", err)
 		return err
 	}
 	if result.MatchedCount == 0 {
+		fmt.Println("⚠️ Dorm not found for ID:", dormID)
 		return errors.New("dorm not found")
 	}
+	fmt.Println("✅ User", userID, "added to dorm", dormID)
 	return nil
 }
 
-// RemoveUserFromDorm uklanja korisnika iz liste korisnika doma
+// RemoveUserFromDorm uklanja korisnika iz liste korisnika doma (za slučaj kada je id string)
 func (r *DormRepository) RemoveUserFromDorm(dormID, userID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	filter := bson.M{"_id": dormID}
+	filter := bson.M{"id": dormID} // koristi "id" umjesto "_id"
 
 	update := bson.M{
 		"$pull": bson.M{"users": userID}, // uklanja korisnika
-		"$inc":  bson.M{"occupied": -1},  // smanjuje broj zauzetih mesta
+		"$inc":  bson.M{"occupied": -1},  // smanjuje broj zauzetih mjesta
 	}
+
+	fmt.Println("🧩 Removing user:", userID, "from dorm:", dormID)
+	fmt.Println("📄 Filter:", filter)
+	fmt.Println("📄 Update:", update)
 
 	result, err := r.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
+		fmt.Println("❌ MongoDB update error:", err)
 		return err
 	}
+
 	if result.MatchedCount == 0 {
+		fmt.Println("⚠️ Dorm not found for ID:", dormID)
 		return errors.New("dorm not found")
 	}
+
+	fmt.Println("✅ User successfully removed from dorm:", dormID)
 	return nil
 }
