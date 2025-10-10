@@ -1,0 +1,32 @@
+<div class="register-container mt-5">
+  <h2>Registracija</h2>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+  <div *ngIf="message" class="alert alert-success">{{ message }}</div>
+
+  <form (ngSubmit)="register()" #registerForm="ngForm" class="mt-3">
+    <div class="form-group mb-3">
+      <label for="username">Korisničko ime:</label>
+      <input type="text" id="username" [(ngModel)]="username" name="username" class="form-control" required>
+    </div>
+
+    <div class="form-group mb-3">
+      <label for="email">Email:</label>
+      <input type="email" id="email" [(ngModel)]="email" name="email" class="form-control" required>
+    </div>
+
+    <div class="form-group mb-3">
+      <label for="password">Lozinka:</label>
+      <input type="password" id="password" [(ngModel)]="password" name="password" class="form-control" required>
+    </div>
+
+    <div class="form-group mb-3">
+      <label for="confirmPassword">Potvrdi lozinku:</label>
+      <input type="password" id="confirmPassword" [(ngModel)]="confirmPassword" name="confirmPassword" class="form-control" required>
+    </div>
+
+    <button class="btn btn-primary" [disabled]="loading">
+      {{ loading ? 'Registracija...' : 'Registruj se' }}
+    </button>
+  </form>
+</div>

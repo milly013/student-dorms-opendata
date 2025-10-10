@@ -11,6 +11,7 @@ import { Requests } from './pages/requests/requests';
 import { PopularDorms } from './pages/popular-dorms/popular-dorms';
 import { MoveOut } from './pages/move-out/move-out';
 import { CreateDorm } from './pages/create-dorm/create-dorm';
+import { Register } from './pages/register/register';
 
 
 export const routes: Routes = [
@@ -26,6 +27,7 @@ export const routes: Routes = [
   { path: 'opendata/popularDorms', component: PopularDorms},
   { path: 'requests', component: Requests},
   { path: 'move-out', component: MoveOut},
-  { path: 'create-dorm', component: CreateDorm}
+  { path: 'create-dorm', component: CreateDorm},
+  { path: 'register', component: Register}
 
 ];

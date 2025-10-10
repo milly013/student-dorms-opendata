@@ -25,6 +25,19 @@ export class AuthService {
         })
       );
   }
+  register(username: string, email: string, password: string): Observable<any> {
+    const newUser = {
+      username,
+      email,
+      password,
+      role: 'student',
+      dorm_id: '',
+      inDorm: false
+    };
+
+    return this.http.post(`${this.apiUrl}/register`, newUser);
+  }
+
 
   logout(): void {
     localStorage.removeItem('token');
