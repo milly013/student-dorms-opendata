@@ -154,3 +154,20 @@ func (s *MoveInService) checkStudentInDorm(studentID, token string) (bool, error
 
 	return result.InDorm, nil
 }
+
+// GetRequestsByType vraća sve zahtjeve određenog tipa
+func (s *MoveInService) GetRequestsByType(requestType string) ([]model.MoveInRequest, error) {
+    requests, err := s.repo.GetAll(context.Background())
+    if err != nil {
+        return nil, err
+    }
+
+    filtered := make([]model.MoveInRequest, 0)
+    for _, r := range requests {
+        if r.RequestType == requestType {
+            filtered = append(filtered, r)
+        }
+    }
+
+    return filtered, nil
+}

@@ -261,3 +261,17 @@ func (h *MoveInHandler) CreateIssueRequestHandler(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(req)
 }
+
+// GET /requests/type/{type} – lista zahtjeva po tipu
+func (h *MoveInHandler) GetRequestsByTypeHandler(w http.ResponseWriter, r *http.Request) {
+    requestType := mux.Vars(r)["type"]
+
+    requests, err := h.service.GetRequestsByType(requestType)
+    if err != nil {
+        http.Error(w, "Failed to get requests", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    json.NewEncoder(w).Encode(requests)
+}

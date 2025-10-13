@@ -58,6 +58,7 @@ func main() {
 
 	// 🧩 Nova ruta za prijavu kvara (issue report)
 	r.Handle("/requests/issue", middleware.JWTAuth(http.HandlerFunc(requestHandler.CreateIssueRequestHandler))).Methods("POST")
+	r.Handle("/requests/type/{type}", middleware.JWTAuth(http.HandlerFunc(requestHandler.GetRequestsByTypeHandler))).Methods("GET")
 
 	port := "8083"
 	log.Println("Request-service running on port:", port)
