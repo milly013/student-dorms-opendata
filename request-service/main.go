@@ -33,7 +33,11 @@ func main() {
 	}
 
 	requestRepo := repo.NewMoveInRequestRepository(client)
-	requestService := service.NewMoveInService(requestRepo)
+
+	// 🟢 Dodali authServiceURL koji servis treba
+	authServiceURL := "http://auth-service:8080"
+	requestService := service.NewMoveInService(requestRepo, authServiceURL)
+
 	requestHandler := handler.NewMoveInHandler(requestService)
 
 	r := mux.NewRouter()
@@ -51,6 +55,9 @@ func main() {
 	r.Handle("/requests/{id}/reject", middleware.JWTAuth(http.HandlerFunc(requestHandler.RejectRequest))).Methods("POST")
 	r.Handle("/requests/popular-dorms", middleware.JWTAuth(http.HandlerFunc(requestHandler.GetPopularDorms))).Methods("GET")
 	r.Handle("/requests/{id}", middleware.JWTAuth(http.HandlerFunc(requestHandler.DeleteRequest))).Methods("DELETE")
+
+	// 🧩 Nova ruta za prijavu kvara (issue report)
+	r.Handle("/requests/issue", middleware.JWTAuth(http.HandlerFunc(requestHandler.CreateIssueRequestHandler))).Methods("POST")
 
 	port := "8083"
 	log.Println("Request-service running on port:", port)

@@ -2,9 +2,14 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
 	"request-service/model"
 	"request-service/repo"
 	"sort"
+	"time"
 )
 
 type PopularDorm struct {
@@ -14,12 +19,13 @@ type PopularDorm struct {
 
 // MoveInService upravlja logikom zahtjeva za useljenje
 type MoveInService struct {
-	repo *repo.MoveInRequestRepository
+	repo           *repo.MoveInRequestRepository
+	authServiceURL string // URL auth-servisa za provjeru InDorm
 }
 
 // Novi servis
-func NewMoveInService(r *repo.MoveInRequestRepository) *MoveInService {
-	return &MoveInService{repo: r}
+func NewMoveInService(r *repo.MoveInRequestRepository, authURL string) *MoveInService {
+	return &MoveInService{repo: r, authServiceURL: authURL}
 }
 
 // CreateRequest kreira novi zahtjev za useljenje
@@ -83,4 +89,68 @@ func (s *MoveInService) GetPopularDorms(ctx context.Context) ([]PopularDorm, err
 // DeleteRequest briše zahtjev po ID-u
 func (s *MoveInService) DeleteRequest(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
+}
+
+// 🟢 NOVO: CreateIssueRequest kreira zahtjev tipa "issue_report" uz prosljeđivanje tokena
+func (s *MoveInService) CreateIssueRequest(studentID, description, token string) (*model.MoveInRequest, error) {
+	// 1️⃣ Provjeri da li je student u domu
+	inDorm, err := s.checkStudentInDorm(studentID, token)
+	if err != nil {
+		return nil, err
+	}
+	if !inDorm {
+		return nil, errors.New("student nije u domu, ne može prijaviti kvar")
+	}
+
+	// 2️⃣ Kreiraj novi zahtjev tipa "issue_report"
+	req := &model.MoveInRequest{
+		StudentID:   studentID,
+		Description: description,
+		RequestType: "issue_report",
+		Status:      "pending",
+		CreatedAt:   time.Now(),
+	}
+
+	err = s.repo.Create(context.Background(), req)
+	if err != nil {
+		return nil, fmt.Errorf("neuspješno kreiranje zahtjeva: %w", err)
+	}
+
+	return req, nil
+}
+
+// Helper funkcija koja provjerava InDorm status preko auth-servisa sa JWT tokenom
+func (s *MoveInService) checkStudentInDorm(studentID, token string) (bool, error) {
+	url := fmt.Sprintf("%s/users/%s", s.authServiceURL, studentID)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return false, err
+	}
+
+	// Dodaj Authorization header
+	req.Header.Set("Authorization", token)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, fmt.Errorf("greska pri povezivanju sa auth-service: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return false, fmt.Errorf("auth-service vratio status: %d", resp.StatusCode)
+	}
+
+	var result struct {
+		ID       string `json:"id"`
+		Username string `json:"username"`
+		InDorm   bool   `json:"inDorm"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return false, fmt.Errorf("greska pri parsiranju odgovora: %w", err)
+	}
+
+	return result.InDorm, nil
 }

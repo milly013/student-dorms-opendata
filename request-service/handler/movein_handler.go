@@ -228,3 +228,36 @@ func (h *MoveInHandler) DeleteRequest(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "request deleted successfully"})
 }
+
+// 🟢 Novi endpoint: prijava kvara (issue report)
+func (h *MoveInHandler) CreateIssueRequestHandler(w http.ResponseWriter, r *http.Request) {
+	// Struktura tijela zahtjeva
+	var body struct {
+		StudentID   string `json:"student_id"`
+		Description string `json:"description"`
+	}
+
+	// Dekodiraj JSON body
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "Neispravan format zahtjeva", http.StatusBadRequest)
+		return
+	}
+
+	// Uzmemo token iz header-a
+	token := r.Header.Get("Authorization")
+	if token == "" {
+		http.Error(w, "Nedostaje Authorization token", http.StatusUnauthorized)
+		return
+	}
+
+	// Pozovi servis sa tokenom
+	req, err := h.service.CreateIssueRequest(body.StudentID, body.Description, token)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Vrati rezultat kao JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(req)
+}
