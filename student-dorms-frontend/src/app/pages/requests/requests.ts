@@ -1,10 +1,9 @@
-
-import { Component, NgZone, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { MoveInRequest, RequestService } from '../../services/request.service';
-import { CommonModule } from '@angular/common';
 import { DormService } from '../../services/dorm';
 import { AuthService } from '../../services/auth';
-import { forkJoin, map, switchMap, of } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { forkJoin, map, of, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-requests',
@@ -14,7 +13,6 @@ import { forkJoin, map, switchMap, of } from 'rxjs';
   styleUrls: ['./requests.css']
 })
 export class Requests implements OnInit {
-
   requests: MoveInRequest[] = [];
   loading = true;
   error: string | null = null;
@@ -25,7 +23,7 @@ export class Requests implements OnInit {
     private dormService: DormService,
     private authService: AuthService,
     private ngZone: NgZone
-  ) { }
+  ) {}
 
   ngOnInit(): void {
     this.loadRequests();
@@ -34,90 +32,85 @@ export class Requests implements OnInit {
   loadRequests() {
     if (this.loadingRequests) return;
     this.loadingRequests = true;
-
     this.loading = true;
     this.error = '';
     this.requests = [];
 
-    this.requestService.getAllRequests().pipe(
-      switchMap((requests) => {
-        if (!requests || requests.length === 0) return of([]);
+    this.requestService.getAllRequests()
+      .pipe(
+        // Filtriramo samo move_in i move_out zahtjeve
+        map(requests => requests.filter(r => r.request_type === 'move_in' || r.request_type === 'move_out')),
+        switchMap(filteredRequests => {
+          if (!filteredRequests || filteredRequests.length === 0) return of([]);
 
-        // ✅ Filtriramo samo move_in i move_out zahtjeve
-        const filteredRequests = requests.filter(req =>
-          req.request_type === 'move_in' || req.request_type === 'move_out'
-        );
+          const requestsWithDetails$ = filteredRequests.map(req => {
+            const student$ = req.student_id
+              ? this.authService.getUserInfo(req.student_id).pipe(
+                  map(user => user?.username || 'Nepoznat student')
+                )
+              : of('Nepoznat student');
 
-        if (filteredRequests.length === 0) return of([]);
+            const dorm$ = req.dorm_id
+              ? this.dormService.getDormById(req.dorm_id).pipe(
+                  map(dorm => dorm?.name || 'Nepoznat dom')
+                )
+              : of('Nepoznat dom');
 
-        const requestsWithDetails$ = filteredRequests.map(req => {
-          const student$ = req.student_id
-            ? this.authService.getUserInfo(req.student_id).pipe(
-              map(user => user?.username || user?.name || 'Nepoznat student')
-            )
-            : of('Nepoznat student');
+            return forkJoin({ studentName: student$, dormName: dorm$ }).pipe(
+              map(({ studentName, dormName }) => ({
+                ...req,
+                studentName,
+                dormName
+              }))
+            );
+          });
 
-          const dorm$ = req.dorm_id
-            ? this.dormService.getDormById(req.dorm_id).pipe(
-              map(dorm => dorm?.name || 'Nepoznat dom')
-            )
-            : of('Nepoznat dom');
+          return forkJoin(requestsWithDetails$);
+        })
+      )
+      .subscribe({
+        next: requests => {
+          this.ngZone.run(() => {
+            this.requests = requests;
+            this.loading = false;
+            this.loadingRequests = false;
+            console.log('✅ Učitani zahtjevi:', this.requests);
+          });
+        },
+        error: err => {
+          this.ngZone.run(() => {
+            console.error('❌ Greška pri učitavanju zahtjeva:', err);
+            this.error = 'Greška pri učitavanju zahtjeva';
+            this.loading = false;
+            this.loadingRequests = false;
+          });
+        }
+      });
+  }
 
-          return forkJoin({ studentName: student$, dormName: dorm$ }).pipe(
-            map(({ studentName, dormName }) => ({
-              ...req,
-              studentName,
-              dormName
-            }))
-          );
-        });
-
-        return forkJoin(requestsWithDetails$);
-      })
-    ).subscribe({
-      next: (requests) => {
-        this.ngZone.run(() => { // 👈 forsira update UI-a
-          this.requests = requests;
-          this.loading = false;
-          this.loadingRequests = false;
-          console.log('✅ Učitani zahtjevi:', this.requests);
-        });
+  // Odmah mijenjamo status bez potvrde
+  onApprove(req: MoveInRequest) {
+    this.requestService.approveRequest(req.id).subscribe({
+      next: () => {
+        req.status = 'approved';
+        console.log('✅ Zahtjev odobren:', req.id);
       },
-      error: (err) => {
-        this.ngZone.run(() => { // 👈 i ovdje isto
-          console.error('❌ Greška:', err);
-          this.error = 'Greška pri učitavanju zahtjeva';
-          this.loading = false;
-          this.loadingRequests = false;
-        });
+      error: err => {
+        console.error('❌ Greška pri odobravanju:', err);
+        alert('Greška pri odobravanju zahtjeva.');
       }
     });
   }
 
-  approve(reqId: string) {
-    this.requestService.approveRequest(reqId).subscribe({
+  onReject(req: MoveInRequest) {
+    this.requestService.rejectRequest(req.id).subscribe({
       next: () => {
-        this.requests = this.requests.map(r =>
-          r.id === reqId ? { ...r, status: 'approved' } : r
-        );
+        req.status = 'rejected';
+        console.log('❌ Zahtjev odbijen:', req.id);
       },
-      error: (err) => {
-        console.error('Failed to approve request:', err);
-        alert(`Approve error: ${err.status} - ${err.message}\nDetails: ${JSON.stringify(err.error)}`);
-      }
-    });
-  }
-
-  reject(reqId: string) {
-    this.requestService.rejectRequest(reqId).subscribe({
-      next: () => {
-        this.requests = this.requests.map(r =>
-          r.id === reqId ? { ...r, status: 'rejected' } : r
-        );
-      },
-      error: (err) => {
-        console.error('Failed to reject request:', err);
-        alert(`Reject error: ${err.status} - ${err.message}\nDetails: ${JSON.stringify(err.error)}`);
+      error: err => {
+        console.error('❌ Greška pri odbijanju:', err);
+        alert('Greška pri odbijanju zahtjeva.');
       }
     });
   }

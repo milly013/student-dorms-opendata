@@ -1,0 +1,29 @@
+/* Zelena kolona za approved */
+.status-approved td {
+  background-color: #d4edda; /* svijetlo zelena */
+  color: #155724; /* tamno zelena za tekst */
+  transition: background-color 0.3s;
+}
+
+/* Crvena kolona za rejected */
+.status-rejected td {
+  background-color: #f8d7da; /* svijetlo crvena */
+  color: #721c24; /* tamno crvena za tekst */
+  transition: background-color 0.3s;
+}
+
+/* Plava i svjetleća kolona za pending / novi zahtjev */
+@keyframes blink-blue {
+  0%   { background-color: #cce5ff; } /* svijetloplava */
+  25%  { background-color: #99ccff; }
+  50%  { background-color: #ffffff; } /* bijela */
+  75%  { background-color: #99ccff; }
+  100% { background-color: #cce5ff; }
+}
+
+.status-pending td {
+  animation: blink-blue 1s infinite;
+  color: #004085; /* tamno plava za tekst */
+  font-weight: bold;
+  transition: background-color 0.3s;
+}

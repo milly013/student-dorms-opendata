@@ -15,7 +15,11 @@ export interface MoveInRequest {
   // dodatna polja za prikaz
   studentName?: string;
   dormName?: string;
+
+  // 🌟 Novo polje za vizualizaciju novih zahtjeva
+  newRequest?: boolean;
 }
+
 export interface PopularDorm {
   dorm_id: string;
   request_count: number;
@@ -38,6 +42,7 @@ export class RequestService {
 
     return this.http.get<MoveInRequest[]>(`${this.apiUrl}/requests`, { headers });
   }
+
   createRequest(data: { student_id: string; dorm_id: string; room_type: string }) {
     const token = localStorage.getItem('token');
     let headers = new HttpHeaders();
@@ -58,18 +63,21 @@ export class RequestService {
     if (token) headers = headers.set('Authorization', `Bearer ${token}`);
     return this.http.post(`${this.apiUrl}/requests/${id}/reject`, {}, { headers });
   }
+
   getPopularDorms(): Observable<PopularDorm[]> {
     const token = localStorage.getItem('token');
     let headers = new HttpHeaders();
     if (token) headers = headers.set('Authorization', `Bearer ${token}`);
     return this.http.get<PopularDorm[]>(`${this.apiUrl}/requests/popular-dorms`, { headers });
   }
+
   createMoveOutRequest(data: { student_id: string; dorm_id: string; room_type: string }) {
     const token = localStorage.getItem('token');
     let headers = new HttpHeaders();
     if (token) headers = headers.set('Authorization', `Bearer ${token}`);
     return this.http.post(`${this.apiUrl}/requests/move-out`, data, { headers });
   }
+
   createIssueRequest(data: any, token: string): Observable<any> {
     const headers = {
       Authorization: `Bearer ${token}`,
@@ -78,6 +86,4 @@ export class RequestService {
 
     return this.http.post(`${this.apiUrl}/requests/issue`, data, { headers });
   }
-
-
 }

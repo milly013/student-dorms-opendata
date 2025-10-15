@@ -1,26 +1,46 @@
 <div class="container mt-4">
-  <h2>Prijave kvarova</h2>
+  <h2>📋 Prijave kvarova</h2>
 
-  <div *ngIf="loading">🔄 Učitavanje prijava...</div>
+  <div *ngIf="loading" class="alert alert-info">🔄 Učitavanje prijava...</div>
   <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
 
-  <table *ngIf="!loading && requests.length > 0" class="table table-striped">
-    <thead>
+  <table *ngIf="!loading && requests.length > 0" class="table table-striped align-middle">
+    <thead class="table-dark">
       <tr>
         <th>#</th>
         <th>Student</th>
         <th>Dom</th>
         <th>Opis kvara</th>
+        <th>Status</th>
         <th>Kreirano</th>
+        <th>Akcije</th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let req of requests; let i = index">
+      <tr *ngFor="let req of requests; let i = index"
+          [ngClass]="{
+            'status-approved': req.status === 'approved',
+            'status-rejected': req.status === 'rejected',
+            'status-pending': req.status === 'pending' && req.newRequest
+          }">
         <td>{{ i + 1 }}</td>
         <td>{{ req.studentName || 'Nepoznat student' }}</td>
         <td>{{ req.dormName || 'Nepoznat dom' }}</td>
         <td>{{ req.description }}</td>
+        <td>{{ req.status }}</td>
         <td>{{ req.created_at | date:'short' }}</td>
+        <td>
+          <button class="btn btn-sm btn-success me-2"
+                  (click)="onApprove(req)"
+                  [disabled]="req.status !== 'pending'">
+            ✅ Odobri
+          </button>
+          <button class="btn btn-sm btn-danger"
+                  (click)="onReject(req)"
+                  [disabled]="req.status !== 'pending'">
+            ❌ Odbij
+          </button>
+        </td>
       </tr>
     </tbody>
   </table>
