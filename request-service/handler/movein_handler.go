@@ -95,13 +95,11 @@ func (h *MoveInHandler) ApproveRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update status u bazi prvo
 	if err := h.service.ApproveRequest(ctx, id); err != nil {
 		http.Error(w, "failed to approve request", http.StatusInternalServerError)
 		return
 	}
 
-	// Za move_in / move_out radi dodatne akcije
 	token := r.Header.Get("Authorization")
 	if token == "" {
 		http.Error(w, "missing token", http.StatusUnauthorized)
@@ -124,7 +122,6 @@ func (h *MoveInHandler) ApproveRequest(w http.ResponseWriter, r *http.Request) {
 	case "issue_report":
 		// Samo update status, nema dorm/auth promjene
 	default:
-		// Ako je nepoznat tip, samo loguj i update status
 		fmt.Println("⚠️ ApproveRequest: unknown request type, samo update status")
 	}
 
@@ -161,16 +158,30 @@ func (h *MoveInHandler) ApproveRequest(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": message})
 }
 
+// 🌟 Jedina verzija RejectRequest koja radi sa razlogom
 func (h *MoveInHandler) RejectRequest(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
 	ctx := r.Context()
 
-	if err := h.service.RejectRequest(ctx, id); err != nil {
+	// Dekodiraj razlog odbijanja
+	var body struct {
+		Reason string `json:"reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || strings.TrimSpace(body.Reason) == "" {
+		http.Error(w, "missing or invalid reason", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.RejectRequestWithReason(ctx, id, body.Reason); err != nil {
 		http.Error(w, "failed to reject request", http.StatusInternalServerError)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "request rejected",
+		"reason":  body.Reason,
+	})
 }
 
 func (h *MoveInHandler) GetPopularDorms(w http.ResponseWriter, r *http.Request) {

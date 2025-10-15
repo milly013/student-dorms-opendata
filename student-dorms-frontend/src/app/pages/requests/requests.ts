@@ -88,7 +88,7 @@ export class Requests implements OnInit {
       });
   }
 
-  // Odmah mijenjamo status bez potvrde
+  // Odmah mijenjamo status na "approved"
   onApprove(req: MoveInRequest) {
     this.requestService.approveRequest(req.id).subscribe({
       next: () => {
@@ -102,14 +102,22 @@ export class Requests implements OnInit {
     });
   }
 
+  // Za move-in i move-out: mora se unijeti razlog pri odbijanju
   onReject(req: MoveInRequest) {
-    this.requestService.rejectRequest(req.id).subscribe({
+    const reason = prompt('Unesite razlog odbijanja zahtjeva:');
+    if (!reason || reason.trim() === '') {
+      alert('Morate unijeti razlog odbijanja.');
+      return;
+    }
+
+    this.requestService.rejectRequestWithReason(req.id, reason).subscribe({
       next: () => {
         req.status = 'rejected';
-        console.log('❌ Zahtjev odbijen:', req.id);
+        req.rejectionReason = reason; // čuvamo razlog za prikaz
+        console.log('❌ Zahtjev odbijen:', req.id, 'Razlog:', reason);
       },
       error: err => {
-        console.error('❌ Greška pri odbijanju:', err);
+        console.error('❌ Greška pri odbijanju zahtjeva:', err);
         alert('Greška pri odbijanju zahtjeva.');
       }
     });

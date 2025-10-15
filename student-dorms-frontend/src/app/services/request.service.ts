@@ -18,6 +18,9 @@ export interface MoveInRequest {
 
   // 🌟 Novo polje za vizualizaciju novih zahtjeva
   newRequest?: boolean;
+
+  // 🌟 Novo polje za razlog odbijanja
+  rejectionReason?: string;
 }
 
 export interface PopularDorm {
@@ -57,11 +60,12 @@ export class RequestService {
     return this.http.post(`${this.apiUrl}/requests/${id}/approve`, {}, { headers });
   }
 
-  rejectRequest(id: string) {
+  // 🌟 Odbijanje sa razlogom (za move-in, move-out i issue)
+  rejectRequestWithReason(id: string, reason: string) {
     const token = localStorage.getItem('token');
-    let headers = new HttpHeaders();
+    let headers = new HttpHeaders().set('Content-Type', 'application/json');
     if (token) headers = headers.set('Authorization', `Bearer ${token}`);
-    return this.http.post(`${this.apiUrl}/requests/${id}/reject`, {}, { headers });
+    return this.http.post(`${this.apiUrl}/requests/${id}/reject`, { reason }, { headers });
   }
 
   getPopularDorms(): Observable<PopularDorm[]> {
@@ -83,7 +87,6 @@ export class RequestService {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
-
     return this.http.post(`${this.apiUrl}/requests/issue`, data, { headers });
   }
 }

@@ -13,6 +13,7 @@
         <th>Opis kvara</th>
         <th>Status</th>
         <th>Kreirano</th>
+        <th>Razlog odbijanja</th>
         <th>Akcije</th>
       </tr>
     </thead>
@@ -27,19 +28,28 @@
         <td>{{ req.studentName || 'Nepoznat student' }}</td>
         <td>{{ req.dormName || 'Nepoznat dom' }}</td>
         <td>{{ req.description }}</td>
-        <td>{{ req.status }}</td>
-        <td>{{ req.created_at | date:'short' }}</td>
         <td>
-          <button class="btn btn-sm btn-success me-2"
-                  (click)="onApprove(req)"
-                  [disabled]="req.status !== 'pending'">
-            ✅ Odobri
-          </button>
-          <button class="btn btn-sm btn-danger"
-                  (click)="onReject(req)"
-                  [disabled]="req.status !== 'pending'">
-            ❌ Odbij
-          </button>
+          <span class="badge"
+                [ngClass]="{
+                  'bg-primary text-white': req.status === 'pending',
+                  'bg-success': req.status === 'approved',
+                  'bg-danger': req.status === 'rejected'
+                }">
+            {{ req.status }}
+          </span>
+        </td>
+        <td>{{ req.created_at | date:'short' }}</td>
+        <td>{{ req.rejectionReason || '-' }}</td>
+        <td>
+          <!-- Dugmad se prikazuju samo ako je status pending -->
+          <ng-container *ngIf="req.status === 'pending'">
+            <button class="btn btn-sm btn-success me-2" (click)="onApprove(req)">
+              ✅ Odobri
+            </button>
+            <button class="btn btn-sm btn-danger" (click)="onReject(req)">
+              ❌ Odbij
+            </button>
+          </ng-container>
         </td>
       </tr>
     </tbody>

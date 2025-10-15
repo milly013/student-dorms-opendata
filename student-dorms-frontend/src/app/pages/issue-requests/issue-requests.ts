@@ -13,7 +13,7 @@ import { forkJoin, map, of, switchMap } from 'rxjs';
   styleUrls: ['./issue-requests.css']
 })
 export class IssueRequests implements OnInit {
-  requests: (MoveInRequest & { newRequest?: boolean })[] = [];
+  requests: (MoveInRequest & { newRequest?: boolean; rejectionReason?: string })[] = [];
   loading = true;
   error: string | null = null;
   private loadingRequests = false;
@@ -60,7 +60,8 @@ export class IssueRequests implements OnInit {
                 ...req,
                 studentName,
                 dormName,
-                newRequest: req.status === 'pending' // za blinkanje
+                newRequest: req.status === 'pending', // za blinkanje
+                rejectionReason: req.rejectionReason || '' // inicijalno prazno
               }))
             );
           });
@@ -89,7 +90,6 @@ export class IssueRequests implements OnInit {
   }
 
   onApprove(req: MoveInRequest & { newRequest?: boolean }) {
-    // Uklonjen confirm() da odmah prihvati
     this.requestService.approveRequest(req.id).subscribe({
       next: () => {
         req.status = 'approved';
@@ -104,10 +104,14 @@ export class IssueRequests implements OnInit {
   }
 
   onReject(req: MoveInRequest & { newRequest?: boolean }) {
-    // Uklonjen confirm() da odmah odbije
-    this.requestService.rejectRequest(req.id).subscribe({
+    const reason = prompt('Unesite razlog odbijanja zahtjeva:');
+    if (reason === null || reason.trim() === '') return; // ako admin odustane
+
+    // 🌟 Poziva novu funkciju koja prima reason
+    this.requestService.rejectRequestWithReason(req.id, reason).subscribe({
       next: () => {
         req.status = 'rejected';
+        req.rejectionReason = reason;
         req.newRequest = false;
         console.log('❌ Zahtjev odbijen:', req.id);
       },

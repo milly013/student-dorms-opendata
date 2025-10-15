@@ -7,7 +7,6 @@ import { RequestService } from '../../services/request.service';
 import { AuthService } from '../../services/auth';
 import { forkJoin } from 'rxjs';
 
-
 @Component({
   selector: 'app-dorm-detail',
   templateUrl: './dorm-detail.html',
@@ -28,14 +27,16 @@ export class DormDetailComponent implements OnInit {
   loadingUsers: boolean = false;
   userDormId: string | null = null;
 
+  // Ratings
+  ratings: number[] = [];
+  averageRating: number | null = null;
 
   constructor(
     private route: ActivatedRoute,
     private dormsService: DormService,
     private requestService: RequestService,
     public authService: AuthService,
-    private cdr: ChangeDetectorRef   
-
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -45,7 +46,6 @@ export class DormDetailComponent implements OnInit {
     }
 
     const userId = this.authService.getUserId();
-    
     if (!userId) return;
 
     this.authService.getUserInfo(userId).subscribe(user => {
@@ -59,6 +59,16 @@ export class DormDetailComponent implements OnInit {
   loadDorm(id: string): void {
     this.dormsService.getDormById(id).subscribe((data) => {
       this.dorm = data;
+
+      // ✅ Konvertujemo ocjene iz objekata u number[]
+      this.ratings = this.dorm?.ratings?.map(r => r.score) || [];
+      if (this.ratings.length > 0) {
+        this.averageRating = this.ratings.reduce((a, b) => a + b, 0) / this.ratings.length;
+        this.averageRating = parseFloat(this.averageRating.toFixed(1));
+      } else {
+        this.averageRating = null;
+      }
+
       this.loadUsersInDorm();
     });
   }
@@ -83,6 +93,7 @@ export class DormDetailComponent implements OnInit {
       }
     });
   }
+
   submitRequest(): void {
     if (!this.dorm) {
       this.requestMessage = 'Greška: dom nije učitan.';
@@ -101,9 +112,9 @@ export class DormDetailComponent implements OnInit {
     };
 
     this.requestService.createRequest(data).subscribe({
-      next: (res) => {
+      next: () => {
         this.requestMessage = '✅ Zahtjev za useljenje je uspješno poslan!';
-        this.roomType = 'single'; // reset forme
+        this.roomType = 'single';
       },
       error: (err) => {
         console.error(err);
@@ -113,6 +124,7 @@ export class DormDetailComponent implements OnInit {
       }
     });
   }
+
   submitMoveOut(): void {
     if (!this.dorm) {
       this.moveOutMessage = 'Greška: dom nije učitan.';
@@ -133,7 +145,7 @@ export class DormDetailComponent implements OnInit {
     };
 
     this.requestService.createMoveOutRequest(data).subscribe({
-      next: (res) => {
+      next: () => {
         this.moveOutMessage = '✅ Zahtjev za iseljenje je uspješno poslan!';
       },
       error: (err) => {
@@ -144,6 +156,7 @@ export class DormDetailComponent implements OnInit {
       }
     });
   }
+
   submitIssue(): void {
     if (!this.dorm) {
       this.issueMessage = 'Greška: dom nije učitan.';
@@ -166,11 +179,10 @@ export class DormDetailComponent implements OnInit {
       student_id: studentId,
       dorm_id: this.dorm.id,
       description: this.issueDescription,
-      
     };
 
     this.requestService.createIssueRequest(issueData, token).subscribe({
-      next: (res) => {
+      next: () => {
         this.issueMessage = '✅ Prijava kvara je uspješno poslana!';
         this.issueDescription = '';
       },
@@ -182,31 +194,29 @@ export class DormDetailComponent implements OnInit {
       }
     });
   }
+
   loadUsersInDorm(): void {
-  if (!this.dorm || !this.dorm.users || this.dorm.users.length === 0) {
-    this.usersInDorm = [];
-    return;
-  }
-
-  this.loadingUsers = true;
-
-  const userObservables = this.dorm.users.map(userId =>
-    this.authService.getPublicUserInfo(userId)
-  );
-
-  forkJoin(userObservables).subscribe({
-    next: (users) => {
-      this.usersInDorm = users;
-      this.loadingUsers = false;
-      this.cdr.detectChanges();
-
-    },
-    error: (err) => {
-      console.error('❌ Greška pri učitavanju korisnika:', err);
-      this.loadingUsers = false;
+    if (!this.dorm || !this.dorm.users || this.dorm.users.length === 0) {
+      this.usersInDorm = [];
+      return;
     }
-  });
-}
 
+    this.loadingUsers = true;
 
+    const userObservables = this.dorm.users.map(userId =>
+      this.authService.getPublicUserInfo(userId)
+    );
+
+    forkJoin(userObservables).subscribe({
+      next: (users) => {
+        this.usersInDorm = users;
+        this.loadingUsers = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('❌ Greška pri učitavanju korisnika:', err);
+        this.loadingUsers = false;
+      }
+    });
+  }
 }

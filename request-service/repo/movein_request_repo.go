@@ -68,13 +68,38 @@ func (r *MoveInRequestRepository) GetByID(ctx context.Context, id string) (*mode
 
 // UpdateStatus mijenja status zahtjeva po ID-u
 func (r *MoveInRequestRepository) UpdateStatus(ctx context.Context, id string, status string) error {
-	// Konvertujemo string ID u Mongo ObjectID
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
 	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": bson.M{"status": status}})
+	if err != nil {
+		return err
+	}
+
+	if res.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+
+	return nil
+}
+
+// ⭐ Nova funkcija: UpdateStatusWithReason
+func (r *MoveInRequestRepository) UpdateStatusWithReason(ctx context.Context, id string, status string, reason string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"status":           status,
+			"rejection_reason": reason, // ✅ ispravno ime polja
+		},
+	}
+
+	res, err := r.collection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
 		return err
 	}

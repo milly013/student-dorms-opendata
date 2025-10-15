@@ -17,43 +17,40 @@ type PopularDorm struct {
 	RequestCount int    `json:"request_count"`
 }
 
-// MoveInService upravlja logikom zahtjeva za useljenje
 type MoveInService struct {
 	repo           *repo.MoveInRequestRepository
-	authServiceURL string // URL auth-servisa za provjeru InDorm
+	authServiceURL string
 }
 
-// Novi servis
 func NewMoveInService(r *repo.MoveInRequestRepository, authURL string) *MoveInService {
 	return &MoveInService{repo: r, authServiceURL: authURL}
 }
 
-// CreateRequest kreira novi zahtjev za useljenje
 func (s *MoveInService) CreateRequest(ctx context.Context, req *model.MoveInRequest) error {
 	return s.repo.Create(ctx, req)
 }
 
-// GetAllRequests vraća sve zahtjeve
 func (s *MoveInService) GetAllRequests(ctx context.Context) ([]model.MoveInRequest, error) {
 	return s.repo.GetAll(ctx)
 }
 
-// GetRequestByID vraća MoveInRequest po njegovom ID-ju
 func (s *MoveInService) GetRequestByID(ctx context.Context, id string) (*model.MoveInRequest, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-// ApproveRequest postavlja status zahtjeva na "approved"
 func (s *MoveInService) ApproveRequest(ctx context.Context, id string) error {
 	return s.repo.UpdateStatus(ctx, id, "approved")
 }
 
-// RejectRequest postavlja status zahtjeva na "rejected"
+// ⭐ Nova funkcija za odbijanje sa razlogom
+func (s *MoveInService) RejectRequestWithReason(ctx context.Context, id string, reason string) error {
+	return s.repo.UpdateStatusWithReason(ctx, id, "rejected", reason)
+}
+
 func (s *MoveInService) RejectRequest(ctx context.Context, id string) error {
 	return s.repo.UpdateStatus(ctx, id, "rejected")
 }
 
-// GetStudentRequest vraća zahtjev po studentID-u
 func (s *MoveInService) GetStudentRequest(ctx context.Context, studentID string) (*model.MoveInRequest, error) {
 	return s.repo.GetByStudent(ctx, studentID)
 }
@@ -64,21 +61,18 @@ func (s *MoveInService) GetPopularDorms(ctx context.Context) ([]PopularDorm, err
 		return nil, err
 	}
 
-	// Mapira domID -> broj zahtjeva, samo za move_in
 	dormCount := make(map[string]int)
 	for _, r := range requests {
-		if r.RequestType == "move_in" { // <- filtriramo samo move_in
+		if r.RequestType == "move_in" {
 			dormCount[r.DormID]++
 		}
 	}
 
-	// Pretvori mapu u slice za sortiranje
 	result := make([]PopularDorm, 0, len(dormCount))
 	for dormID, count := range dormCount {
 		result = append(result, PopularDorm{DormID: dormID, RequestCount: count})
 	}
 
-	// Sortiraj po broju zahtjeva, opadajuće
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].RequestCount > result[j].RequestCount
 	})
@@ -86,14 +80,11 @@ func (s *MoveInService) GetPopularDorms(ctx context.Context) ([]PopularDorm, err
 	return result, nil
 }
 
-// DeleteRequest briše zahtjev po ID-u
 func (s *MoveInService) DeleteRequest(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-// CreateIssueRequest kreira zahtjev tipa "issue_report" uz prosljeđivanje tokena
 func (s *MoveInService) CreateIssueRequest(studentID, dormID, description, token string) (*model.MoveInRequest, error) {
-
 	inDorm, err := s.checkStudentInDorm(studentID, token)
 	if err != nil {
 		return nil, err
@@ -119,16 +110,12 @@ func (s *MoveInService) CreateIssueRequest(studentID, dormID, description, token
 	return req, nil
 }
 
-// Helper funkcija koja provjerava InDorm status preko auth-servisa sa JWT tokenom
 func (s *MoveInService) checkStudentInDorm(studentID, token string) (bool, error) {
 	url := fmt.Sprintf("%s/users/%s", s.authServiceURL, studentID)
-
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return false, err
 	}
-
-	// Dodaj Authorization header
 	req.Header.Set("Authorization", token)
 
 	client := &http.Client{}
@@ -155,7 +142,6 @@ func (s *MoveInService) checkStudentInDorm(studentID, token string) (bool, error
 	return result.InDorm, nil
 }
 
-// GetRequestsByType vraća sve zahtjeve određenog tipa
 func (s *MoveInService) GetRequestsByType(requestType string) ([]model.MoveInRequest, error) {
 	requests, err := s.repo.GetAll(context.Background())
 	if err != nil {

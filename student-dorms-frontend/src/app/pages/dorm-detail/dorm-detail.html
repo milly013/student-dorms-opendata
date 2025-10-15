@@ -7,7 +7,8 @@
       </p>
       <p class="card-text"><strong>Tip:</strong> {{ dorm.type }}</p>
       <p class="card-text"><strong>Kapacitet:</strong> {{ dorm.capacity }}</p>
-      <p class="card-text"><strong>Zauzeto:</strong> {{ dorm.occupied }}</p>
+      <p class="card-text"><strong>Zauzeto:</strong> <span class="badge bg-danger">{{ dorm.occupied }}</span></p>
+      <p class="card-text"><strong>Slobodno:</strong> <span class="badge bg-success">{{ dorm.capacity - dorm.occupied }}</span></p>
 
       <h4 class="mt-4">Sadržaji</h4>
       <ul class="list-group mb-3">
@@ -19,31 +20,26 @@
       <h4>Opis</h4>
       <p>{{ dorm.description }}</p>
 
-      <h4 class="mt-4">Komentari</h4>
-      <ul class="list-group mb-3">
-        <li *ngFor="let comment of dorm.comments" class="list-group-item">
-          <strong>{{ comment.user_id }}:</strong> {{ comment.message }}
-          <br />
-          <small class="text-muted">{{ comment.date }}</small>
-        </li>
-      </ul>
+      <!-- Prosečna ocjena sa smile emotikonom -->
+      <h4 class="mt-4">Kako su nas studenti ocenili 🙂</h4>
+      <p>
+        <span class="badge bg-info fs-5">{{ averageRating || '-' }}</span>
+      </p>
+
+      <!-- Studenti doma -->
       <div *ngIf="usersInDorm.length > 0" class="mt-4">
-        <h4>Korisnici u domu</h4>
+        <h4>Studenti doma</h4>
         <table class="table table-sm table-bordered">
           <thead>
             <tr>
               <th>#</th>
               <th>Username</th>
-              <th>Email</th>
-              <th>Role</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let user of usersInDorm; let i = index">
               <td>{{ i + 1 }}</td>
-              <td>{{ user.username || 'Nepoznat' }}</td>
-              <td>{{ user.email || 'Nepoznat' }}</td>
-              <td>{{ user.role || '-' }}</td>
+              <td class="small">{{ user.username || 'Nepoznat' }}</td>
             </tr>
           </tbody>
         </table>
@@ -52,9 +48,10 @@
       <div *ngIf="loadingUsers" class="mt-2">
         Učitavanje korisnika...
       </div>
+
       <div *ngIf="dorm as currentDorm">
         <div *ngIf="userBelongsToDormMap[currentDorm.id]" class="mt-4">
-          <h4 class="mt-4">Dodaj ocjenu</h4>
+          <h4>Dodaj ocjenu</h4>
           <form (ngSubmit)="submitRating()" class="row g-3 align-items-center">
             <div class="col-auto">
               <label for="rating" class="col-form-label">Ocjena (1–5):</label>
@@ -67,7 +64,7 @@
               <button type="submit" class="btn btn-primary">Pošalji</button>
             </div>
           </form>
-          <!-- ✅ Forma za prijavu kvara -->
+
           <h4 class="mt-4">Prijavi kvar</h4>
           <form (ngSubmit)="submitIssue()" #issueForm="ngForm">
             <div class="mb-3">
@@ -75,7 +72,7 @@
               <textarea id="issueDescription" name="issueDescription" [(ngModel)]="issueDescription"
                 class="form-control" rows="3" required
                 placeholder="Unesite opis problema (npr. ne radi grijanje, pukla cijev...)">
-        </textarea>
+              </textarea>
             </div>
             <button type="submit" class="btn btn-warning">Pošalji prijavu kvara</button>
           </form>
@@ -91,7 +88,7 @@
 
 <div *ngIf="dorm as currentDorm">
   <div *ngIf="!userBelongsToDormMap[currentDorm.id] && !authService.isAdmin()" class="mt-4">
-    <h4 class="mt-4">Zatraži useljenje</h4>
+    <h4>Zatraži useljenje</h4>
     <form (ngSubmit)="submitRequest()" #moveInForm="ngForm">
       <div class="mb-3">
         <label for="roomType" class="form-label">Tip sobe</label>
@@ -108,6 +105,7 @@
 <div *ngIf="requestMessage" class="alert alert-info mt-3">
   {{ requestMessage }}
 </div>
+
 <div *ngIf="dorm as currentDorm">
   <div *ngIf="userBelongsToDormMap[currentDorm.id]" class="mt-4">
     <h4>Zatraži iseljenje</h4>

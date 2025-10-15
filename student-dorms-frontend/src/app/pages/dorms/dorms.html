@@ -1,13 +1,15 @@
 <div class="container mt-4">
-  <h2>Dostupni domovi</h2>
-  <table class="table table-striped">
-    <thead>
+  <h2>🏠 Dostupni domovi</h2>
+
+  <table *ngIf="dorms && dorms.length > 0" class="table table-striped align-middle">
+    <thead class="table-dark">
       <tr>
         <th>Naziv</th>
         <th>Grad</th>
         <th>Kapacitet</th>
         <th>Zauzeto</th>
-        <th></th>
+        <th>Slobodno</th>
+        <th>Akcije</th>
       </tr>
     </thead>
     <tbody>
@@ -15,13 +17,22 @@
         <td>{{ dorm.name }}</td>
         <td>{{ dorm.city }}</td>
         <td>{{ dorm.capacity }}</td>
-        <td>{{ dorm.occupied }}</td>
+        <td>
+          <span class="badge bg-danger">{{ dorm.occupied }}</span>
+        </td>
+        <td>
+          <span class="badge bg-success">{{ dorm.capacity - dorm.occupied }}</span>
+        </td>
         <td>
           <button class="btn btn-primary btn-sm" (click)="viewDorm(dorm.id)">
-            Pregledaj
+            🔍 Pregledaj
           </button>
         </td>
       </tr>
     </tbody>
   </table>
+
+  <div *ngIf="!dorms || dorms.length === 0" class="alert alert-info mt-3">
+    Nema dostupnih domova.
+  </div>
 </div>
