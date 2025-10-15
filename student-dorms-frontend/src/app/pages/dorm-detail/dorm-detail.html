@@ -27,6 +27,31 @@
           <small class="text-muted">{{ comment.date }}</small>
         </li>
       </ul>
+      <div *ngIf="usersInDorm.length > 0" class="mt-4">
+        <h4>Korisnici u domu</h4>
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of usersInDorm; let i = index">
+              <td>{{ i + 1 }}</td>
+              <td>{{ user.username || 'Nepoznat' }}</td>
+              <td>{{ user.email || 'Nepoznat' }}</td>
+              <td>{{ user.role || '-' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="loadingUsers" class="mt-2">
+        Učitavanje korisnika...
+      </div>
       <div *ngIf="dorm as currentDorm">
         <div *ngIf="userBelongsToDormMap[currentDorm.id]" class="mt-4">
           <h4 class="mt-4">Dodaj ocjenu</h4>
@@ -42,6 +67,18 @@
               <button type="submit" class="btn btn-primary">Pošalji</button>
             </div>
           </form>
+          <!-- ✅ Forma za prijavu kvara -->
+          <h4 class="mt-4">Prijavi kvar</h4>
+          <form (ngSubmit)="submitIssue()" #issueForm="ngForm">
+            <div class="mb-3">
+              <label for="issueDescription" class="form-label">Opis kvara</label>
+              <textarea id="issueDescription" name="issueDescription" [(ngModel)]="issueDescription"
+                class="form-control" rows="3" required
+                placeholder="Unesite opis problema (npr. ne radi grijanje, pukla cijev...)">
+        </textarea>
+            </div>
+            <button type="submit" class="btn btn-warning">Pošalji prijavu kvara</button>
+          </form>
         </div>
       </div>
 
@@ -51,6 +88,7 @@
     </div>
   </div>
 </div>
+
 <div *ngIf="dorm as currentDorm">
   <div *ngIf="!userBelongsToDormMap[currentDorm.id] && !authService.isAdmin()" class="mt-4">
     <h4 class="mt-4">Zatraži useljenje</h4>

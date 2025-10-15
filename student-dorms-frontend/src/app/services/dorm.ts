@@ -17,6 +17,7 @@ export interface Dorm {
   ratings?: { user_id: string; score: number }[];
   comments?: { user_id: string; message: string; date: string }[];
   preferences?: string[];
+  users?: string[];
 }
 
 @Injectable({

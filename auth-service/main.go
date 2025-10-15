@@ -53,6 +53,7 @@ func main() {
 	r.Handle("/users/{id}/out-dorm", middleware.JWTAuth(http.HandlerFunc(userHandler.SetOutDorm))).Methods("POST")
 	r.Handle("/users/{id}/assign-dorm", middleware.JWTAuth(http.HandlerFunc(userHandler.AssignDorm))).Methods("POST")
 	r.Handle("/users/{id}/remove-dorm", middleware.JWTAuth(http.HandlerFunc(userHandler.RemoveDorm))).Methods("POST")
+	r.HandleFunc("/public/users/{id}", userHandler.GetPublicUserHandler).Methods("GET")
 
 	// Health check
 	r.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {

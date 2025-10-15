@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Dorm, DormService } from '../../services/dorm';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RequestService } from '../../services/request.service';
 import { AuthService } from '../../services/auth';
+import { forkJoin } from 'rxjs';
 
 
 @Component({
@@ -21,12 +22,19 @@ export class DormDetailComponent implements OnInit {
   requestMessage: string | null = null;
   moveOutMessage: string | null = null;
   userBelongsToDormMap: { [dormId: string]: boolean } = {};
+  issueDescription: string = '';
+  issueMessage: string | null = null;
+  usersInDorm: any[] = []; 
+  loadingUsers: boolean = false;
+  userDormId: string | null = null;
+
 
   constructor(
     private route: ActivatedRoute,
     private dormsService: DormService,
     private requestService: RequestService,
-    public authService: AuthService
+    public authService: AuthService,
+    private cdr: ChangeDetectorRef   
 
   ) { }
 
@@ -37,10 +45,12 @@ export class DormDetailComponent implements OnInit {
     }
 
     const userId = this.authService.getUserId();
+    
     if (!userId) return;
 
     this.authService.getUserInfo(userId).subscribe(user => {
       if (this.dorm) {
+        this.userDormId = this.dorm.id;
         this.userBelongsToDormMap[this.dorm.id] = user.dorm_id === this.dorm.id;
       }
     });
@@ -49,6 +59,7 @@ export class DormDetailComponent implements OnInit {
   loadDorm(id: string): void {
     this.dormsService.getDormById(id).subscribe((data) => {
       this.dorm = data;
+      this.loadUsersInDorm();
     });
   }
 
@@ -133,5 +144,69 @@ export class DormDetailComponent implements OnInit {
       }
     });
   }
+  submitIssue(): void {
+    if (!this.dorm) {
+      this.issueMessage = 'Greška: dom nije učitan.';
+      return;
+    }
+
+    const studentId = this.authService.getUserId();
+    if (!studentId) {
+      this.issueMessage = 'Molimo prijavite se prije prijave kvara.';
+      return;
+    }
+
+    if (!this.issueDescription.trim()) {
+      this.issueMessage = 'Molimo unesite opis kvara.';
+      return;
+    }
+
+    const token = this.authService.getToken() || '';
+    const issueData = {
+      student_id: studentId,
+      dorm_id: this.dorm.id,
+      description: this.issueDescription,
+      
+    };
+
+    this.requestService.createIssueRequest(issueData, token).subscribe({
+      next: (res) => {
+        this.issueMessage = '✅ Prijava kvara je uspješno poslana!';
+        this.issueDescription = '';
+      },
+      error: (err) => {
+        console.error('❌ Greška pri prijavi kvara:', err);
+        this.issueMessage = err.status === 401
+          ? '❌ Niste autorizovani. Prijavite se ponovo.'
+          : '❌ Greška pri slanju prijave.';
+      }
+    });
+  }
+  loadUsersInDorm(): void {
+  if (!this.dorm || !this.dorm.users || this.dorm.users.length === 0) {
+    this.usersInDorm = [];
+    return;
+  }
+
+  this.loadingUsers = true;
+
+  const userObservables = this.dorm.users.map(userId =>
+    this.authService.getPublicUserInfo(userId)
+  );
+
+  forkJoin(userObservables).subscribe({
+    next: (users) => {
+      this.usersInDorm = users;
+      this.loadingUsers = false;
+      this.cdr.detectChanges();
+
+    },
+    error: (err) => {
+      console.error('❌ Greška pri učitavanju korisnika:', err);
+      this.loadingUsers = false;
+    }
+  });
+}
+
 
 }

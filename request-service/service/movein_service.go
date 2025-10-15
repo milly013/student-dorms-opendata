@@ -91,9 +91,9 @@ func (s *MoveInService) DeleteRequest(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
 
-// 🟢 NOVO: CreateIssueRequest kreira zahtjev tipa "issue_report" uz prosljeđivanje tokena
-func (s *MoveInService) CreateIssueRequest(studentID, description, token string) (*model.MoveInRequest, error) {
-	// 1️⃣ Provjeri da li je student u domu
+// CreateIssueRequest kreira zahtjev tipa "issue_report" uz prosljeđivanje tokena
+func (s *MoveInService) CreateIssueRequest(studentID, dormID, description, token string) (*model.MoveInRequest, error) {
+
 	inDorm, err := s.checkStudentInDorm(studentID, token)
 	if err != nil {
 		return nil, err
@@ -102,9 +102,9 @@ func (s *MoveInService) CreateIssueRequest(studentID, description, token string)
 		return nil, errors.New("student nije u domu, ne može prijaviti kvar")
 	}
 
-	// 2️⃣ Kreiraj novi zahtjev tipa "issue_report"
 	req := &model.MoveInRequest{
 		StudentID:   studentID,
+		DormID:      dormID,
 		Description: description,
 		RequestType: "issue_report",
 		Status:      "pending",
@@ -157,17 +157,17 @@ func (s *MoveInService) checkStudentInDorm(studentID, token string) (bool, error
 
 // GetRequestsByType vraća sve zahtjeve određenog tipa
 func (s *MoveInService) GetRequestsByType(requestType string) ([]model.MoveInRequest, error) {
-    requests, err := s.repo.GetAll(context.Background())
-    if err != nil {
-        return nil, err
-    }
+	requests, err := s.repo.GetAll(context.Background())
+	if err != nil {
+		return nil, err
+	}
 
-    filtered := make([]model.MoveInRequest, 0)
-    for _, r := range requests {
-        if r.RequestType == requestType {
-            filtered = append(filtered, r)
-        }
-    }
+	filtered := make([]model.MoveInRequest, 0)
+	for _, r := range requests {
+		if r.RequestType == requestType {
+			filtered = append(filtered, r)
+		}
+	}
 
-    return filtered, nil
+	return filtered, nil
 }

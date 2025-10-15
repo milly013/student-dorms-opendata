@@ -110,5 +110,8 @@ export class AuthService {
       tap(result => console.log(`User ${userId} belongs to dorm ${dormId}:`, result))
     );
   }
+  getPublicUserInfo(userId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/public/users/${userId}`);
+  }
 
 }

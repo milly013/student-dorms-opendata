@@ -9,6 +9,8 @@ export interface MoveInRequest {
   status: string;
   room_type: string;
   created_at: string;
+  request_type: string;
+  description: string;
 
   // dodatna polja za prikaz
   studentName?: string;
@@ -23,9 +25,9 @@ export interface PopularDorm {
   providedIn: 'root'
 })
 export class RequestService {
-private apiUrl = 'http://localhost:8000/requests'; 
- 
-  constructor(private http: HttpClient) {}
+  private apiUrl = 'http://localhost:8000/requests';
+
+  constructor(private http: HttpClient) { }
 
   getAllRequests(): Observable<MoveInRequest[]> {
     const token = localStorage.getItem('token');
@@ -57,16 +59,25 @@ private apiUrl = 'http://localhost:8000/requests';
     return this.http.post(`${this.apiUrl}/requests/${id}/reject`, {}, { headers });
   }
   getPopularDorms(): Observable<PopularDorm[]> {
-  const token = localStorage.getItem('token');
-  let headers = new HttpHeaders();
-  if (token) headers = headers.set('Authorization', `Bearer ${token}`);
-  return this.http.get<PopularDorm[]>(`${this.apiUrl}/requests/popular-dorms`, { headers });
-}
-createMoveOutRequest(data: { student_id: string; dorm_id: string; room_type: string }) {
+    const token = localStorage.getItem('token');
+    let headers = new HttpHeaders();
+    if (token) headers = headers.set('Authorization', `Bearer ${token}`);
+    return this.http.get<PopularDorm[]>(`${this.apiUrl}/requests/popular-dorms`, { headers });
+  }
+  createMoveOutRequest(data: { student_id: string; dorm_id: string; room_type: string }) {
     const token = localStorage.getItem('token');
     let headers = new HttpHeaders();
     if (token) headers = headers.set('Authorization', `Bearer ${token}`);
     return this.http.post(`${this.apiUrl}/requests/move-out`, data, { headers });
   }
+  createIssueRequest(data: any, token: string): Observable<any> {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    return this.http.post(`${this.apiUrl}/requests/issue`, data, { headers });
+  }
+
 
 }

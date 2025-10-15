@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, NgZone } from '@angular/core';
 import { Dorm, DormService } from '../../services/dorm';
 import { PopularDorm, RequestService } from '../../services/request.service';
 import { forkJoin } from 'rxjs';
@@ -16,7 +16,8 @@ export class PopularDorms implements OnInit, AfterViewInit  {
 
   constructor(
     private requestService: RequestService,
-    private dormService: DormService
+    private dormService: DormService,
+    private ngZone: NgZone
   ) {}
   ngAfterViewInit(): void {
     this.loadPopularDorms();
@@ -26,17 +27,16 @@ export class PopularDorms implements OnInit, AfterViewInit  {
     this.loadPopularDorms();
   }
 
-  loadPopularDorms() {
+ loadPopularDorms() {
     this.requestService.getPopularDorms().subscribe({
       next: (popular: PopularDorm[]) => {
-        // Za svaki dormID pozovi DormService da dobiješ detalje
         const dormRequests = popular.map(d => this.dormService.getDormById(d.dorm_id));
-        
-        // forkJoin čeka sve HTTP pozive da se završe
+
         forkJoin(dormRequests).subscribe({
           next: (dorms: Dorm[]) => {
-            // Sortiraj dormove prema originalnom redu popularnosti
-            this.popularDorms = popular.map(p => dorms.find(d => d.id === p.dorm_id)!);
+            this.ngZone.run(() => { // 👈 forsiraj change detection
+              this.popularDorms = popular.map(p => dorms.find(d => d.id === p.dorm_id)!);
+            });
           },
           error: (err) => console.error('Failed to load dorm details', err)
         });

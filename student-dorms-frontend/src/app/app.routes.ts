@@ -12,6 +12,7 @@ import { PopularDorms } from './pages/popular-dorms/popular-dorms';
 import { MoveOut } from './pages/move-out/move-out';
 import { CreateDorm } from './pages/create-dorm/create-dorm';
 import { Register } from './pages/register/register';
+import { IssueRequests } from './pages/issue-requests/issue-requests';
 
 
 export const routes: Routes = [
@@ -28,6 +29,7 @@ export const routes: Routes = [
   { path: 'requests', component: Requests},
   { path: 'move-out', component: MoveOut},
   { path: 'create-dorm', component: CreateDorm},
-  { path: 'register', component: Register}
+  { path: 'register', component: Register},
+  { path: 'issue-requests', component: IssueRequests}
 
 ];

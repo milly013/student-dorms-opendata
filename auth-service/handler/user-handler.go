@@ -205,3 +205,24 @@ func (h *UserHandler) RemoveDorm(w http.ResponseWriter, r *http.Request) {
 		"userId":  userID,
 	})
 }
+func (h *UserHandler) GetPublicUserHandler(w http.ResponseWriter, r *http.Request) {
+	userId := mux.Vars(r)["id"]
+
+	user, err := h.userService.GetUserByID(userId)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Vrati samo javne podatke (npr. username, dorm_id, inDorm)
+	publicUser := struct {
+		ID       string `json:"id"`
+		Username string `json:"username"`
+	}{
+		ID:       user.ID.Hex(),
+		Username: user.Username,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(publicUser)
+}

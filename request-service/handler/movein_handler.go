@@ -229,11 +229,12 @@ func (h *MoveInHandler) DeleteRequest(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"message": "request deleted successfully"})
 }
 
-// 🟢 Novi endpoint: prijava kvara (issue report)
+// prijava kvara (issue report)
 func (h *MoveInHandler) CreateIssueRequestHandler(w http.ResponseWriter, r *http.Request) {
 	// Struktura tijela zahtjeva
 	var body struct {
 		StudentID   string `json:"student_id"`
+		DormID      string `json:"dorm_id"`
 		Description string `json:"description"`
 	}
 
@@ -251,7 +252,7 @@ func (h *MoveInHandler) CreateIssueRequestHandler(w http.ResponseWriter, r *http
 	}
 
 	// Pozovi servis sa tokenom
-	req, err := h.service.CreateIssueRequest(body.StudentID, body.Description, token)
+	req, err := h.service.CreateIssueRequest(body.StudentID, body.DormID, body.Description, token)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -264,14 +265,14 @@ func (h *MoveInHandler) CreateIssueRequestHandler(w http.ResponseWriter, r *http
 
 // GET /requests/type/{type} – lista zahtjeva po tipu
 func (h *MoveInHandler) GetRequestsByTypeHandler(w http.ResponseWriter, r *http.Request) {
-    requestType := mux.Vars(r)["type"]
+	requestType := mux.Vars(r)["type"]
 
-    requests, err := h.service.GetRequestsByType(requestType)
-    if err != nil {
-        http.Error(w, "Failed to get requests", http.StatusInternalServerError)
-        return
-    }
+	requests, err := h.service.GetRequestsByType(requestType)
+	if err != nil {
+		http.Error(w, "Failed to get requests", http.StatusInternalServerError)
+		return
+	}
 
-    w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(requests)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(requests)
 }

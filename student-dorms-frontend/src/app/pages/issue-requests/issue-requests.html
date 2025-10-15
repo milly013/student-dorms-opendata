@@ -1,0 +1,31 @@
+<div class="container mt-4">
+  <h2>Prijave kvarova</h2>
+
+  <div *ngIf="loading">🔄 Učitavanje prijava...</div>
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <table *ngIf="!loading && requests.length > 0" class="table table-striped">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Student</th>
+        <th>Dom</th>
+        <th>Opis kvara</th>
+        <th>Kreirano</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let req of requests; let i = index">
+        <td>{{ i + 1 }}</td>
+        <td>{{ req.studentName || 'Nepoznat student' }}</td>
+        <td>{{ req.dormName || 'Nepoznat dom' }}</td>
+        <td>{{ req.description }}</td>
+        <td>{{ req.created_at | date:'short' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="!loading && requests.length === 0" class="alert alert-info">
+    Nema prijavljenih kvarova.
+  </div>
+</div>
